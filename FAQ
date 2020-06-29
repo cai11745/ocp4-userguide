@@ -1,0 +1,78 @@
+### 集群状态校验，所有AVAILABLE 都是 true
+[root@bastion ~]# oc get clusteroperators
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.4.6     True        False         False      5d18h
+cloud-credential                           4.4.6     True        False         False      6d4h
+cluster-autoscaler                         4.4.6     True        False         False      5d19h
+console                                    4.4.6     True        False         False      5d18h
+csi-snapshot-controller                    4.4.6     True        False         False      16h
+dns                                        4.4.6     True        False         False      5d19h
+etcd                                       4.4.6     True        False         False      5d20h
+image-registry                             4.4.6     True        False         False      10h
+ingress                                    4.4.6     True        False         False      5d19h
+insights                                   4.4.6     True        False         False      5d20h
+kube-apiserver                             4.4.6     True        False         False      5d20h
+kube-controller-manager                    4.4.6     True        False         False      5d22h
+kube-scheduler                             4.4.6     True        False         False      5d22h
+kube-storage-version-migrator              4.4.6     True        False         False      5d19h
+machine-api                                4.4.6     True        False         False      5d22h
+machine-config                             4.4.6     False       False         True       16h
+marketplace                                4.4.6     True        False         False      10h
+monitoring                                 4.4.6     True        False         False      10h
+network                                    4.4.6     True        False         False      5d22h
+node-tuning                                4.4.6     True        False         False      5d19h
+openshift-apiserver                        4.4.6     True        False         False      10h
+openshift-controller-manager               4.4.6     True        False         False      10h
+openshift-samples                          4.4.6     True        False         False      5d19h
+operator-lifecycle-manager                 4.4.6     True        False         False      5d22h
+operator-lifecycle-manager-catalog         4.4.6     True        False         False      5d22h
+operator-lifecycle-manager-packageserver   4.4.6     True        False         False      10h
+service-ca                                 4.4.6     True        False         False      5d22h
+service-catalog-apiserver                  4.4.6     True        False         False      5d22h
+service-catalog-controller-manager         4.4.6     True        False         False      5d22h
+storage                                    4.4.6     True        False         False      5d20h
+
+
+
+### 不能查看pod日志
+web页面报错
+An error occurred while retrieving the requested logs.
+
+命令报错
+[root@bastion ~]# oc logs openjdk-app-6-build
+Error from server: Get https://192.168.2.23:10250/containerLogs/ademo/openjdk-app-6-build/sti-build: remote error: tls: internal error
+
+解决：
+[root@bastion ~]# oc  get csr --all-namespaces
+[root@bastion ~]# oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc adm certificate approve
+
+
+### build 报错
+没有内部仓库，创建内部镜像仓库
+
+Generated from build-controller
+82 times in the last hour
+Error starting build: an image stream cannot be used as build output because the integrated container image registry is not configured
+
+
+
+### podman push 失败，仓库是 dockerhub的 registry 镜像
+[root@bastion deploy]# podman push registry.example.com:5000/external_storage/nfs-client-provisioner:latest
+Getting image source signatures
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob a17ae64bae4f skipped: already exists
+Copying blob 8dfad2055603 skipped: already exists
+Copying blob bd01fa00617b [--------------------------------------] 0.0b / 0.0b
+Writing manifest to image destination
+Error: Error copying image to the remote destination: Error writing manifest: Error uploading manifest latest to registry.example.com:5000/external_storage/nfs-client-provisioner: received unexpected HTTP status: 500 Internal Server Error
+解决：
+在仓库的日志看到这个，网上查询是要版本换成2.6，新的2.7 不支持
+time="2020-06-29T13:29:37.901639587Z" level=error msg="response completed with error" auth.user.name=root err.code=unknown err.detail="manifest schema v1 unsupported" err.message="unknown error"
+
+重新推送镜像成功
+Writing manifest to image destination
+DEBU[0000] PUT https://registry.example.com:5000/v2/external_storage/nfs-client-provisioner/manifests/latest
+Storing signatures
+DEBU[0001] Successfully pushed docker://registry.example.com:5000/external_storage/nfs-client-provisioner:latest with digest sha256:b61d360618259b48e8a69fd32c44ef7b10cd0378e3779518821e87e0c84b9c73
+
