@@ -16,14 +16,18 @@
   * [使用HTPasswd方式管理用户](./用户与权限管理/使用HTPasswd方式管理用户.md)
   * [移除kubeadmin默认管理员](./用户与权限管理/移除kubeadmin默认管理员.md)
 
+* 存储管理
+  * [nfs-provisioner提供storageclass动态存储](./存储管理/nfs-provisioner提供storageclass动态存储.md)
+
+* 镜像仓库
+  * [安装内部镜像仓库及存储持久化](./镜像仓库/安装内部镜像仓库及存储持久化.md)
+  * [使用Samples-Operator更新ImageStream](./镜像仓库/使用Samples-Operator更新ImageStream.md)
+
 
 * 资源管理--未就绪
-  * [2020-03-30-kaf装与开启ACL权限控制](middleware/2020-03-30-kafka-install.md)
-
 
 * 应用管理--未就绪
-  * [2020-06-06-树莓派安装docker环境](others/2020-06-06-树莓派安装docker环境.md)
-  
+
 * devops
 
 
@@ -37,4 +41,4 @@
 
 **扫一扫，关注微信公众号，不迷路，实时分享容器平台技术。或者直接搜 老菜**
 
-<div align="center"><img width="300" height="300" src="./image/gongzhonghao.jpeg"/></div>
+<div align="center"><img width="300" height="300" src="./images/gongzhonghao.jpeg"/></div>

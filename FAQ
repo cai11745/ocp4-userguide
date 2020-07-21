@@ -1,39 +1,3 @@
-### 集群状态校验，所有AVAILABLE 都是 true
-[root@bastion ~]# oc get clusteroperators
-NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
-authentication                             4.4.6     True        False         False      5d18h
-cloud-credential                           4.4.6     True        False         False      6d4h
-cluster-autoscaler                         4.4.6     True        False         False      5d19h
-console                                    4.4.6     True        False         False      5d18h
-csi-snapshot-controller                    4.4.6     True        False         False      16h
-dns                                        4.4.6     True        False         False      5d19h
-etcd                                       4.4.6     True        False         False      5d20h
-image-registry                             4.4.6     True        False         False      10h
-ingress                                    4.4.6     True        False         False      5d19h
-insights                                   4.4.6     True        False         False      5d20h
-kube-apiserver                             4.4.6     True        False         False      5d20h
-kube-controller-manager                    4.4.6     True        False         False      5d22h
-kube-scheduler                             4.4.6     True        False         False      5d22h
-kube-storage-version-migrator              4.4.6     True        False         False      5d19h
-machine-api                                4.4.6     True        False         False      5d22h
-machine-config                             4.4.6     False       False         True       16h
-marketplace                                4.4.6     True        False         False      10h
-monitoring                                 4.4.6     True        False         False      10h
-network                                    4.4.6     True        False         False      5d22h
-node-tuning                                4.4.6     True        False         False      5d19h
-openshift-apiserver                        4.4.6     True        False         False      10h
-openshift-controller-manager               4.4.6     True        False         False      10h
-openshift-samples                          4.4.6     True        False         False      5d19h
-operator-lifecycle-manager                 4.4.6     True        False         False      5d22h
-operator-lifecycle-manager-catalog         4.4.6     True        False         False      5d22h
-operator-lifecycle-manager-packageserver   4.4.6     True        False         False      10h
-service-ca                                 4.4.6     True        False         False      5d22h
-service-catalog-apiserver                  4.4.6     True        False         False      5d22h
-service-catalog-controller-manager         4.4.6     True        False         False      5d22h
-storage                                    4.4.6     True        False         False      5d20h
-
-
-
 ### 不能查看pod日志
 web页面报错
 An error occurred while retrieving the requested logs.
@@ -46,15 +10,12 @@ Error from server: Get https://192.168.2.23:10250/containerLogs/ademo/openjdk-ap
 [root@bastion ~]# oc  get csr --all-namespaces
 [root@bastion ~]# oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc adm certificate approve
 
-
 ### build 报错
 没有内部仓库，创建内部镜像仓库
 
 Generated from build-controller
 82 times in the last hour
 Error starting build: an image stream cannot be used as build output because the integrated container image registry is not configured
-
-
 
 ### podman push 失败，仓库是 dockerhub的 registry 镜像
 [root@bastion deploy]# podman push registry.example.com:5000/external_storage/nfs-client-provisioner:latest
