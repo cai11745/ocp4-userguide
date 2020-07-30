@@ -23,7 +23,9 @@
   * [安装内部镜像仓库及存储持久化](./镜像仓库/安装内部镜像仓库及存储持久化.md)
   * [使用Samples-Operator更新ImageStream](./镜像仓库/使用Samples-Operator更新ImageStream.md)
 
-
+* 应用商店
+  * [搭建私有helm仓库及图形管理界面](./应用商店/搭建私有helm仓库及图形管理界面.md)
+  
 * 资源管理--未就绪
 
 * 应用管理--未就绪

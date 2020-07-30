@@ -72,16 +72,15 @@ helm search repo mysql
 
 # 将charts 文件下载到本地
 helm pull az-stable/mysql
- helm pull az-stable/redis
 helm pull az-stable/tomcat
 ...
 
 # ls
-mysql-1.6.6.tgz  redis-10.5.7.tgz  tomcat-0.4.1.tgz
+mysql-1.6.6.tgz  tomcat-0.4.1.tgz
  
 ```
 
-测试仓库接口，能正常返回已有的三个 helm charts 信息，说明 charts 文件放到对应目录下，仓库会自动更新  
+测试仓库接口，能正常返回已有的 helm charts 信息，说明 charts 文件放到对应目录下，仓库会自动更新  
 ```bash
 [root@bastion charts]# curl localhost:8080/api/charts |jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -111,21 +110,20 @@ mysql-1.6.6.tgz  redis-10.5.7.tgz  tomcat-0.4.1.tgz
 # 安装 helm push 插件
 helm plugin install https://github.com/chartmuseum/helm-push.git
 
-# 从官网下载一个 postgres
-helm search repo postgres
-helm pull az-stable/postgresql
+# 从官网下载一个 consul
+helm search repo consul
+helm pull az-stable/consul 
 
 # 添加本地仓库到 helm repo，看下仓库内容
 helm repo add localrepo http://192.168.2.19:8080
 helm search repo localrepo
     NAME            	CHART VERSION	APP VERSION	DESCRIPTION                                       
     localrepo/mysql 	1.6.6        	5.7.30     	Fast, reliable, scalable, and easy to use open-...
-    localrepo/redis 	10.5.7       	5.0.7      	DEPRECATED Open source, advanced key-value stor...
     localrepo/tomcat	0.4.1        	7.0        	Deploy a basic tomcat application server with s...
 
 # helm push 推送 postgres
-helm push postgresql-8.6.4.tgz localrepo
-如果出现报错，权限问题 "Error: 500: open /charts/postgresql-8.6.4.tgz: permission denied
+helm push consul-7.1.3.tgz localrepo
+如果出现报错，权限问题 "Error: 500: open /charts/consul-7.1.3.tgz: permission denied
 Error: plugin "push" exited with error" 
 直接给本地目录权限最大， 再次push  chmod 777 -R /opt/charts/
 
@@ -134,9 +132,8 @@ helm repo update
 [root@bastion charts]# helm search repo localrepo
 
     NAME                	CHART VERSION	APP VERSION	DESCRIPTION                                       
+    localrepo/consul      7.1.3         1.8.0       Highly available and distributed service discov...
     localrepo/mysql     	1.6.6        	5.7.30     	Fast, reliable, scalable, and easy to use open-...
-    localrepo/postgresql	8.6.4        	11.7.0     	DEPRECATED Chart for PostgreSQL, an object-rela...
-    localrepo/redis     	10.5.7       	5.0.7      	DEPRECATED Open source, advanced key-value stor...
     localrepo/tomcat    	0.4.1        	7.0        	Deploy a basic tomcat application server with s...
 ```
 
@@ -179,17 +176,11 @@ ng-ingress-nginx-ingress-default-backend   ClusterIP      172.30.91.91     <none
 
 通过浏览器访问 k8s节点ip:31537  
 
-页面上能看到4个，可是我实际后台是7个，也没有什么日志告诉我原因，哎，猜测和helm版本切换有关。。。
-容我提个issue， 后续再更新  
-
 ```bash
-[root@bastion ~]# helm search repo localrepo
+[root@bastion charts]# helm search repo localrepo
 NAME                    CHART VERSION   APP VERSION     DESCRIPTION                                       
 localrepo/consul        7.1.3           1.8.0           Highly available and distributed service discov...
-localrepo/mongodb       7.8.10          4.2.4           DEPRECATED NoSQL document-oriented database tha...
 localrepo/mysql         1.6.6           5.7.30          Fast, reliable, scalable, and easy to use open-...
-localrepo/postgresql    8.6.4           11.7.0          DEPRECATED Chart for PostgreSQL, an object-rela...
-localrepo/redis         10.5.7          5.0.7           DEPRECATED Open source, advanced key-value stor...
 localrepo/tomcat        0.4.1           7.0             Deploy a basic tomcat application server with s...
 localrepo/zookeeper     5.19.1          3.6.1           A centralized service for maintaining configura...
 ```
@@ -221,10 +212,12 @@ kubeapps 和 monocular 类似，都是bitnami 公司维护的，多了已发布h
 使用方法见官网  
 https://github.com/kubeapps/kubeapps  
 
+注意访问的时候是使用 kubeapps 这个svc 的nodeport， 这个应用不依赖于ingress  
+
 查看通过 helm 发布的应用，支持按照 namespace 区分  
 ![monocular-ui-2](../images/应用商店/kubeapps-applications.png)
 
-还是只能看到4个，看来和 monocular 代码一样的  
+这块和 monocular 一样  
 ![monocular-ui-2](../images/应用商店/kubeapps-catalog.png)
 
 可以通过页面添加仓库
