@@ -30,7 +30,7 @@ Chartmuseum 除了给我们提供一个类似于web服务器的功能之外，�
 - 提供了Prometheus的集成，对外提供自己的监控信息。
 - 没有用户的概念，但是基于目录实现了一定程度上的多租户的需求。
 
-### Chartmuseum 搭建
+### 1. Chartmuseum 搭建
 直接使用最简单的 docker run 方式，使用local 本地存储方式，通过 -v 映射到宿主机 /opt/charts    
 更多支持安装方式见官网  
 
@@ -51,7 +51,7 @@ docker run -d \
 
 ```
 
-### 准备 helm 及离线 chart，推送到私有库
+### 2. 准备 helm 及离线 chart，推送到私有库
 给我们的私有仓库准备些chart，可以是自己生成的或者从公共仓库获取
 
 先安装 helm3， 添加源
@@ -137,7 +137,7 @@ helm repo update
     localrepo/tomcat    	0.4.1        	7.0        	Deploy a basic tomcat application server with s...
 ```
 
-### 安装 ingress controller
+### 3. 安装 ingress controller
 Monocular UI 必须依赖ingress，如果环境里没有，先安装一个
 
 ```bash
@@ -145,7 +145,7 @@ helm search repo ingress
 helm install ng-ingress az-stable/nginx-ingress 
 ```
 
-###  安装Monocular UI 界面，管理helm charts
+### 4. 安装Monocular UI 界面，管理helm charts
 官方站点 https://github.com/helm/monocular
 
 通过 helm 方式来安装
@@ -173,17 +173,8 @@ ng-ingress-nginx-ingress-controller        LoadBalancer   172.30.241.122   <pend
 ng-ingress-nginx-ingress-default-backend   ClusterIP      172.30.91.91     <none>                                 80/TCP                       4h53m
 ```
 
-
 通过浏览器访问 k8s节点ip:31537  
-
-```bash
-[root@bastion charts]# helm search repo localrepo
-NAME                    CHART VERSION   APP VERSION     DESCRIPTION                                       
-localrepo/consul        7.1.3           1.8.0           Highly available and distributed service discov...
-localrepo/mysql         1.6.6           5.7.30          Fast, reliable, scalable, and easy to use open-...
-localrepo/tomcat        0.4.1           7.0             Deploy a basic tomcat application server with s...
-localrepo/zookeeper     5.19.1          3.6.1           A centralized service for maintaining configura...
-```
+标记 deprecated: true 的charts，即为弃用的，不会展示在页面  
 
 ![monocular-ui-1](../images/应用商店/monocular-ui-1.png)
 
@@ -206,13 +197,13 @@ helmui-monocular-sync-scheduled-localrepo   0 * * * *   False     0        8m57s
 [root@bastion ~]# kubectl edit cronjob helmui-monocular-sync-scheduled-localrepo 
 ```
 
-### 另一款界面管理工具 kubeapps 
+### 5. 另一款界面管理工具 kubeapps 
 
 kubeapps 和 monocular 类似，都是bitnami 公司维护的，多了已发布helm 应用的查看，以及可以通过页面添加 repo，功能比上面的多，建议用这个。   
 使用方法见官网  
 https://github.com/kubeapps/kubeapps  
 
-注意访问的时候是使用 kubeapps 这个svc 的nodeport， 这个应用不依赖于ingress  
+注意访问的时候是使用 kubeapps 这个svc 的nodeport， 不依赖于ingress  
 
 查看通过 helm 发布的应用，支持按照 namespace 区分  
 ![monocular-ui-2](../images/应用商店/kubeapps-applications.png)

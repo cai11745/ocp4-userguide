@@ -3,7 +3,7 @@ openshift sample operator 负责安装和更新 imagestream 和 template。
 通过openshift 自带的模板 catalog 或者 from git，database， 都会使用到imagestream 和 template。      
 离线环境下 imagestream 关联的镜像在初始部署中未曾下载， 需要在部署完成后手动补充，并修改镜像仓库地址指向。
 
-### 获取镜像列表并同步到本地仓库
+### 1. 获取镜像列表并同步到本地仓库
 系统自带的imagestream 都在名为openshift 这个 project 下  
 ```bash
 oc project openshift 
@@ -51,7 +51,7 @@ for i in `cat imagelist.txt`; do oc image mirror -a /root/pull-secret.json regis
 
 镜像同步完成后，镜像仓库数据文件 /opt/registry/data 大小约 70G
 
-### 修改sample operator 配置以更新imagestream
+### 2. 修改sample operator 配置以更新imagestream
 
 更新之前可以看下 sample operator 的状态，message 提示镜像导入失败
 ```bash
@@ -105,7 +105,7 @@ oc describe configs.samples.operator.openshift.io/cluster
 oc describe co openshift-samples  
 这两处 message 应该没有报错，或者是自己可预料的情况，比如某些镜像在之前没有同步。  
 
-### 通过 template 发布 mysql （可选项）
+### 3. 通过 template 发布 mysql （可选项）
 在 console 页面切到 developer 角色，选择 mysql 的模板，模板会使用到 mysql 的imagestream，可以测试下镜像是否导入成功  
 搜索mysql，有存储选左边的，没有可用存储就选右边的  
 ![catalog-mysql](../images/镜像仓库/catalog-mysql-no-pv.png)
@@ -113,7 +113,7 @@ oc describe co openshift-samples
 发布完成后，在 Administrator 角色，Workloads -- pods 可以查看到最终运行的 mysql 实例  
 ![pod-mysql](../images/镜像仓库/mysql-deploy-from-template.png)
 
-### FAQ
+### 4. FAQ
 1. imagestream 指向私有仓库 X509  
 oc describe configs.samples.operator.openshift.io/cluster 在 message 中可以看到日志  
 https://registry.example.com:5000/v2/: x509: certificate signed by unknown authority

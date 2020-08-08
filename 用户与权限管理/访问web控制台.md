@@ -1,7 +1,7 @@
 ## 访问 openshift web 控制台
 openshift web console 在集群部署中会默认安装。会提供一个友好的 web 管理页面，满足绝大部分场景的业务发布与维护。及一些平台配置参数维护。
 
-### 配置域名解析
+### 1. 配置域名解析
 
 首先，找到访问的域名，和router 所在节点
 ```bash
@@ -19,7 +19,7 @@ openshift-ingress                                       router-default-679488d97
 
 写入hosts，或者配置到dnsserver。 如果有多个router，且配置了负载，则解析到负载ip。
 
-### 访问 web 页面
+### 2. 访问 web 页面
 
 通过浏览器访问 https://console-openshift-console.apps.ocp4.example.com
 

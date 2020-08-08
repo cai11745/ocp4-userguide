@@ -5,7 +5,7 @@ PV回收的时候以 archieved-${namespace}-${pvcName}-${pvName} 的命名格式
 
 这个步骤建议在集群部署完了就操作，后续内部镜像仓库、jenkins 等都会用到持久化存储。
  
-### 部署 nfs server
+### 1. 部署 nfs server
 若已有nfs server 或者 nas 跳过此步骤。  
 这边把nfs server 部署在 bastion 节点，关闭firewalld 和 selinux  
 
@@ -31,7 +31,7 @@ cat /tmp/123/t1.txt
 rm -rf /tmp/123/t1.txt
 ```
 
-### 部署nfs-client-provisioner
+### 2. 部署nfs-client-provisioner
 前提条件是已有 NFS服务器，并且NFS服务器与Openshift的节点都能网络连通。
 
 https://github.com/kubernetes-incubator/external-storage
@@ -136,7 +136,7 @@ managed-nfs-storage (default)   fuseim.pri/ifs   Delete          Immediate      
 
 ```
 
-### 功能验证 （可选项）
+### 3. 功能验证 （可选项）
 
 deploy 目录下有 test-pod 和 test-claim 
 
@@ -169,10 +169,10 @@ SUCCESS
 
 至此，使用 nfs 提供 storageclass 已完成。
 
-### 如何使用 storageclass
+### 4. 如何使用 storageclass
 由于 pv 会自动创建，我们只要建个 pvc 就行了。
 
-#### 1. 通过 yaml 创建 pvc
+#### 4.1 通过 yaml 创建 pvc
 由于我们的 storageclass 已经设置为 default， 所有下面 annotations 的参数可以去掉
 
 ```bash
@@ -190,13 +190,13 @@ spec:
       storage: 1Gi
 ```
 
-#### 2. 通过 web 页面创建 pvc
+#### 4.2 通过 web 页面创建 pvc
 在 web 页面，Administrator 角色，Storage--PVC， 点 create， 选择 storageclass，填写 pvc 的name 、读写属性、容量  
 完成后会创建 pvc 和 pv
 
 ![create-pvc-storageclass](../images/存储管理/create-pvc-storageclass.png)
 
-#### 3. 应用中 volume 指定使用 claim （用于statefulset）
+#### 4.3 应用中 volume 指定使用 claim （用于statefulset）
 
 在 statefulset 使用存储时，由于是有状态应用，每个 pod 都是独立的 pvc，这有别于 deployment 所有 pod 使用同一个pvc。  
 所以通过 volumeClaimTemplates 来创建一组 pvc， 提供给各个 pod 使用。

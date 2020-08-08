@@ -45,7 +45,7 @@ unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
     location = "registry.example.com:5000/ocp4/openshift4"
 ```
 
-### registry-mirror 配置方式
+### 1. registry-mirror 配置方式
 registry-mirror 由上可知是通过 ImageContentSourcePolicy 这种资源方式进行管理的
 
 这个资源对象通过 Machine Config Operator (MCO) 进行管理生效，所以先确认 machine-config 正常， available 要是true
@@ -56,7 +56,7 @@ machine-config   4.4.6     False       False         True       22h
 
 https://docs.openshift.com/container-platform/4.4/openshift_images/image-configuration.html
 
-### 新增 registry-mirror 
+### 2. 新增 registry-mirror 
 我们新增一个 ImageContentSourcePolicy 把 registry.redhat.io 重定向到私有仓库 registry.example.com:5000  
 
 ```bash
@@ -128,12 +128,12 @@ machine-config   4.4.9     True        False         False      12s
     location = "registry.example.com:5000/rhscl"
 ```
 
-### 测试mirror 效果
+### 3. 测试mirror 效果
 
 
 
 
-### insec
+### 4. insec
 
 oc edit image.config.openshift.io/cluster
 

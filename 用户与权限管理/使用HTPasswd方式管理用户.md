@@ -11,9 +11,9 @@
 登录的提示信息  
 ` You are logged in as a temporary administrative user. Update the cluster OAuth configuration to allow others to log in. `
 
-### 使用 oc 命令管理 htpasswd 作为 ocp 用户管理
+### 1. 使用 oc 命令管理 htpasswd 作为 ocp 用户管理
 
-#### 首先创建密码文件
+#### 1.1 首先创建密码文件
 
 第一个用户参数需要带 -c 创建文件，后面添加用户不要带c，不然会覆盖文件。
 
@@ -25,7 +25,7 @@ htpasswd -B -b htpasswd.txt user2 123456
 htpasswd -B -b htpasswd.txt user3 123456
 ```
 
-#### 创建密钥导入上述 htpasswd 密码文件
+#### 1.2 创建密钥导入上述 htpasswd 密码文件
 把密码文件导入到 openshift-config project 中，secret 名称 htpass-secret 可以自定义， --from-file 后面的 htpasswd 必须是这个字段，不能修改。
 
 ```bash
@@ -36,7 +36,7 @@ NAME            TYPE     DATA   AGE
 htpass-secret   Opaque   1      25s
 ```
 
-#### 创建 oauth CR
+#### 1.3 创建 oauth CR
 创建一个 oauth  Custom Resource (CR) ，使用上面的 htpasswd
 
 ```bash
@@ -69,7 +69,7 @@ Warning: oc apply should be used on resources created by either oc create --save
 
 ```
 
-#### 测试新用户登录
+#### 1.4 测试新用户登录
 通过命令或者 web 页面登录测试新用户。 这些用户进去之后都只能自己新建 projecct 操作，没有赋权全局。
 
 ```bash
@@ -88,7 +88,7 @@ Login failed (401 Unauthorized)
 解决方法：
 这个应该 user1 用户之前登录过，参照下一步的特别注意，清除之前的 user1 用户。注意别删错了，secret 不能删。
 
-#### 增删用户
+#### 1.5 增删用户
 如果要增删用户，修改之前创建的 secret
 
 ```bash
@@ -115,7 +115,7 @@ oc create secret generic htpass-secret --from-file=htpasswd=users.htpasswd --dry
 2. 删除  identity 中的 user
 ` oc delete identity my_htpasswd_provider:<username> `
 
-#### 用户权限设置
+#### 1.6 用户权限设置
 给 user1 集群管理员权限，这是最大权限  
 给 user2 cluster-reader 权限，可以查看所有 project 下的资源
 给 user3 赋予 openshift-monitoring project 管理员权限
@@ -128,7 +128,7 @@ oc adm policy add-cluster-role-to-user cluster-reader user2
 oc adm policy add-role-to-user admin user3 -n openshift-monitoring
 ```
 
-### 通过 web 页面配置 oauth 采用 htpasswd 认证
+### 2. 通过 web 页面配置 oauth 采用 htpasswd 认证
 除了通过命令导入也可以通过页面，前提是先创建好 htpasswd 文件，等于说 secret 和 oauth 的资源是web 页面帮助创建的。  
 
 通过上面的提示信息跳转，或者 Administrator 角色，进入菜单 Administration--Cluster Settings--Global Configuration--Oauth  
