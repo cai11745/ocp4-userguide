@@ -19,6 +19,7 @@
 
 * 应用商店
   * [搭建私有helm仓库及图形管理界面](./应用商店/搭建私有helm仓库及图形管理界面.md)
+  * [离线部署operatorhub并批量导入](./应用商店/离线部署operatorhub并批量导入operator.md)
 
 
 * 

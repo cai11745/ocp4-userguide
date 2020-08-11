@@ -276,10 +276,3 @@ serverless-operator                 My Operator Catalog   4m1s
 
 真实的日志收集组件，日志存储、日志展示模块，在 Installed operator 的详情页进行创建。  
 完整的日志系统部署与使用在“日志与监控”章节会介绍。  
-
-
-
-
-
-
-

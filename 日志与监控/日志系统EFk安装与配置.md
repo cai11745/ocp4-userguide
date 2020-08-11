@@ -1,12 +1,18 @@
-## 查看服务/实例日志与终端使用
+## 日志系统EFk安装与配置
 
 本篇介绍openshift4 日志系统的安装与配置。 openshift4 默认安装没有自带日志系统，需要我们手动通过 operator 安装。  
 如果集群可以联网，可以直接在 web 页面，operatorhub 页面找到 Cluster logging 进行部署。  
-离线环境，需先准备离线的 operatorhub 环境，可参照文章 [离线部署operatorhub并批量导入operator](./operatorhub)
+离线环境，需先准备离线的 operatorhub 环境，可参照文章 [离线部署operatorhub并批量导入operator](../应用商店/离线部署operatorhub并批量导入operator.md)
+
+### 简介
+集群日志系统基于Elasticsearch，Fluentd和Kibana（EFK）。收集器Fluentd部署到OpenShift集群中的每个节点。它收集所有节点和容器日志，并将它们写入Elasticsearch（ES）。Kibana是集中式的Web UI，用户和管理员可以在其中使用汇总的数据创建丰富的可视化效果和仪表板，数据来源于ES。
 
 
 
-### 查看服务日志
+
+### 安装 Cluster logging
+
+
 查看服务下所有实例的日志  
 应用中心--服务管理，选择服务名称进入服务详情，在服务详情页面点击更多，会看到"服务日志"选项  
 ![deployment-log-1.png](../images/application/deployment-log-1.png)
