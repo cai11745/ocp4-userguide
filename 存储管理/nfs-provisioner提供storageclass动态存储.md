@@ -12,15 +12,19 @@ PV回收的时候以 archieved-${namespace}-${pvcName}-${pvName} 的命名格式
 ```bash
 yum install nfs-utils -y
 mkdir -p /nfs/storageclass
-echo "/nfs/storageclass *(rw,no_root_squash)" >> /etc/exports
+echo "/nfs/storageclass *(rw,sync,all_squash)" >> /etc/exports
 chown -R nfsnobody.nfsnobody  /nfs
 chmod -R 777 /nfs
 systemctl restart nfs-server
 systemctl enable nfs-server
 ```
 
+all_squash：在任何用户挂载 NFS 主机共享目录时，这个使用者的权限将被压缩成为匿名使用者，通常他的 UID 与 GID 都会变成 nfsnobody 那个系统账号的身份。
+为了避免多个用户操作同一目录或文件存在的权限问题。
+
 可选步骤：
 可以在ocp 节点上测试下挂载 nfs server，测试下写入和删除，无误则nfs server 工作正常
+
 
 ```bash
 mkdir /tmp/123
