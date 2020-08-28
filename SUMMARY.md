@@ -13,6 +13,9 @@
 * 存储管理
   * [nfs-provisioner提供storageclass动态存储](./存储管理/nfs-provisioner提供storageclass动态存储.md)
 
+* 日志与监控
+  * [日志系统EFK安装与配置](./日志与监控/日志系统EFK安装与配置.md)
+
 * 镜像仓库
   * [安装内部镜像仓库及存储持久化](./镜像仓库/安装内部镜像仓库及存储持久化.md)
   * [使用Samples-Operator更新ImageStream](./镜像仓库/使用Samples-Operator更新ImageStream.md)
