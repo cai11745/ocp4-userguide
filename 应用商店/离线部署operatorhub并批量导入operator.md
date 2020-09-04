@@ -38,7 +38,7 @@ oc get operatorhub -o yaml
 
 ```bash
 podman login registry.example.com:5000
-podman login registry.redhat.io
+podman login registry.redhat.io   #如果这个仓库login 不上，下面通过命令 -a 指定集群部署时候所使用的 pull-secret.json 也可以
 
 oc adm catalog build \
     --appregistry-org redhat-operators \
@@ -162,7 +162,10 @@ mv bin/skopeo /usr/local/bin/
 
 用 skopeo 命令登录相关仓库  
 ```bash
+# login 红帽仓库，如果 login 不上，在 下面脚本的 skopeo 命令 加上 --authfile /root/pull-secret.json 指定授权文件，这个 json 文件是安装集群时候从官网下载的，包含了红帽仓库的权限
 skopeo login -u <registry.redhat.io_user> -p <registry.redhat.io_psw> registry.redhat.io
+
+# login 私有仓库
 skopeo login -u <registry.example.com_user> -p <registry.example.com_psw> registry.example.com:5000
 ```
 
@@ -179,6 +182,10 @@ cat redhat-operators-manifests/mapping.txt | while read line; do
   fi
 done
 ```
+
+如果出现这个报错：
+FATA[0001] Error initializing source docker://registry.redhat.io/openshift4/ose-elasticsearch-operator@sha256:b1463becf264e75e383d8cc33eaa407002499583b40a90eed8b071b627215ed3: unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication   
+在上面 skopeo 命令的最后加上  --authfile /root/pull-secret.json  即可
 
 以上 skopeo 相关命令和脚本来自 "米开朗基杨"  
 
