@@ -148,7 +148,7 @@ Failed to pull image "registry.redhat.io/openshift4/ose-cluster-logging-operator
 
 解决方法：  
 https://bugzilla.redhat.com/show_bug.cgi?id=1800674  
-在ocp4.5 fix 了。  
+在ocp4.5 fix 了。(2020.9.5 update，ocp4.5.7尚未解决)  
 其他版本手动通过 skopeo 之前的进行同步操作。  
 
 通过源码安装最新版 skopeo  

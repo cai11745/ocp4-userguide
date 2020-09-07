@@ -109,11 +109,11 @@ Approval Strategy： Automatic
 并且在 Workloads -- pods，可以看到 istio-operator-xx ，Status 应该是 Running，Ready 应该是 1/1  
 
 #### 通过自定义资源完成 ServiceMesh 安装
-通过 ServiceMeshControlPlane 这个自定义资源对象来创建 istio 组件
+通过 ServiceMeshControlPlane 这个自定义资源对象来创建 istio 组件，也就是控制平面
 
-创建一个 namespace 如 istio-demo 或其他，通过 oc 命令或者页面导入以下 yaml  
+先创建一个 namespace(名称自定义) 如 istio-system 或其他，然后通过 oc 命令或者页面导入以下 yaml  
 页面导入方法：  
-Operators - Installed Operators，进入 Red Hat OpenShift Service Mesh，在菜单 ‘Istio Service Mesh Control Plane’  选择 ‘Create ServiceMeshControlPlane’，提供了常用参数的可视化选项，也可以通过导入 yaml 方式填入以下内容
+Operators - Installed Operators，进入 Red Hat OpenShift Service Mesh，在菜单 ‘Istio Service Mesh Control Plane’  选择 ‘Create ServiceMeshControlPlane’，提供了常用参数的可视化选项，也可以通过导入 yaml 方式填入以下内容。注意选择上面所创建的project
 
 示例：  
 ```bash
@@ -171,8 +171,153 @@ spec:
         template: all-in-one
 ```
 
+完成后是这样，如果遇到 ImagePullBackOff 问题参照最后FAQ，解释了针对离线环境，可能遇到的两种情况下的镜像拉取失败解决方法。
+```bash
+[root@bastion redhat-operators-manifests]# oc get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+grafana-54966d55d5-qxbfc                  2/2     Running   0          49m
+istio-citadel-6f9b74b754-djrmt            1/1     Running   0          24h
+istio-egressgateway-64ffbdb8c8-jgmpm      1/1     Running   0          57m
+istio-galley-7c6fb78655-2dhr5             1/1     Running   0          61m
+istio-ingressgateway-6c77fdbbd4-65zvs     1/1     Running   0          57m
+istio-pilot-f74779745-g6n7t               2/2     Running   0          59m
+istio-policy-884697ff7-pkh75              2/2     Running   0          61m
+istio-sidecar-injector-66fd9459d9-6cj6p   1/1     Running   0          49m
+istio-telemetry-5d8b8bf754-khdfx          2/2     Running   0          60m
+jaeger-96d4ff7b4-hx4g8                    2/2     Running   0          5m42s
+kiali-7bd96549bd-x87lr                    1/1     Running   0          46m
+prometheus-698fbc5fbf-5hklw               2/2     Running   1          24h
+```
+
+对于多租户环境，Red Hat OpenShift Service Mesh 支持集群中有多个独立 control plane。您可以使用 ServiceMeshControlPlane 模板生成可重复使用的配置。 也就是上面的 yaml 文件导入到不同的 project 就可以生成多个 istio 控制平台，可以按需进行配置参数的调整。  
+
+ServiceMeshMemberRoll 这个资源对象列出了属于 control plane 的项目。只有 ServiceMeshMemberRoll 中列出的项目会受到 control plane 的影响。在将项目添加到特定 control plane 部署的 member roll 之前，项目不属于服务网格。
+
+您必须在 ServiceMeshControlPlane 所在的同一个项目中创建一个名为 default 的 ServiceMeshMemberRoll 资源。
+
+方法同样是在 web console， Installed Operators，进入 Red Hat OpenShift Service Mesh，project 要选择与 controlplane 一致，在菜单 ‘Istio Service Mesh Member Roll’  选择 ‘Create ServiceMeshMemberRoll’，提供了常用参数的可视化选项，也可以通过导入 yaml 方式填入以下内容。
+
+```bash
+# 这个 bookinfo project 先创建好，可以支持多个 project，但每个project只能属于一个 ServiceMeshMemberRoll 资源。
+apiVersion: maistra.io/v1
+kind: ServiceMeshMemberRoll
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  members:
+    # a list of projects joined into the service mesh
+    - bookinfo
+
+```    
+
+![istio-system-installed.png](../images/服务网格ServiceMesh/istio-system-installed.png)
+
+至此 servicemesh istio 框架部署完成，下一步将通过 bookinfo demo 来进一步熟悉 istio 架构和使用。
+
+### FAQ
+两次问题都是镜像拉取失败，离线ocp4 环境，如果使用在线redhat镜像仓库不会存在这个问题，那种情况用不到mirror功能。  
+原因是ocp4 的mirror 功能不支持 tag 方式，只支持 digest 也就是 @sha256 这种方式  
+官方说明在此：
+https://bugzilla.redhat.com/show_bug.cgi?id=1790798
+https://access.redhat.com/articles/4975041
+
+这就是为什么我私有仓库里有 registry.example.com:5000/openshift4/ose-oauth-proxy:4.2 镜像，也做了mirror配置，而拉取 registry.redhat.io/openshift4/ose-oauth-proxy:4.2 就是会失败。
+
+#### issue1： Failed to pull image "registry.redhat.io/openshift4/ose-oauth-proxy:4.2"
+问题概述：
+prometheus-698fbc5fbf-5hklw 这个pod 镜像拉取失败，按理说，我应该参照 issue2 的解决方法，去 clusterserviceversions.operators.coreos.com 这个对象里面去修改，但是我找遍集群所有 clusterserviceversions.operators.coreos.com 和所有pod，没有可以修改这个镜像地址的地址，所以使用了一种笨办法。
+
+问题现象：
+```bash
+[root@bastion ~]# oc get pod
+NAME                             READY   STATUS             RESTARTS   AGE
+istio-citadel-6f9b74b754-djrmt   1/1     Running            0          14s
+prometheus-698fbc5fbf-5hklw      1/2     ImagePullBackOff   0          10s
+Events:
+  Type     Reason          Age                From                               Message
+  ----     ------          ----               ----                               -------
+  Normal   Scheduled       <unknown>          default-scheduler                  Successfully assigned istio-system/prometheus-698fbc5fbf-5hklw to master0.ocp4.example.com
+  Normal   AddedInterface  38s                multus                             Add eth0 [10.254.0.42/24]
+  Normal   Pulled          36s                kubelet, master0.ocp4.example.com  Container image "registry.redhat.io/openshift-service-mesh/prometheus-rhel8@sha256:1b70dfedb073936b2bc900b632917a6c2c8e27efcf94d526e1834295a34edfb7" already present on machine
+  Normal   Created         36s                kubelet, master0.ocp4.example.com  Created container prometheus
+  Normal   Started         36s                kubelet, master0.ocp4.example.com  Started container prometheus
+  Normal   BackOff         35s (x2 over 36s)  kubelet, master0.ocp4.example.com  Back-off pulling image "registry.redhat.io/openshift4/ose-oauth-proxy:4.2"
+  Warning  Failed          35s (x2 over 36s)  kubelet, master0.ocp4.example.com  Error: ImagePullBackOff
+  Normal   Pulling         24s (x2 over 38s)  kubelet, master0.ocp4.example.com  Pulling image "registry.redhat.io/openshift4/ose-oauth-proxy:4.2"
+  Warning  Failed          23s (x2 over 36s)  kubelet, master0.ocp4.example.com  Error: ErrImagePull
+  Warning  Failed          23s (x2 over 36s)  kubelet, master0.ocp4.example.com  Failed to pull image "registry.redhat.io/openshift4/ose-oauth-proxy:4.2": rpc error: code = Unknown desc = unable to retrieve auth token: invalid username/password: unauthorized: Please login to the Red Hat Registry using your Customer Portal credentials. Further instructions can be found here: https://access.redhat.com/RegistryAuthentication
+```
+
+解决方法：
+在 pod 所有节点，先用私有仓库地址把镜像拉下来，再 tag 成 registry.redhat.io 
+```bash
+[core@master0 ~]$ sudo crictl pull registry.example.com:5000/openshift4/ose-oauth-proxy:4.2
+Image is up to date for registry.example.com:5000/openshift4/ose-oauth-proxy@sha256:4be6afd636c51f83fdd9118eb12768a23acd2c5cd0786b986bf80a9450a5c697
+[core@master0 ~]$ sudo podman tag registry.example.com:5000/openshift4/ose-oauth-proxy:4.2 registry.redhat.io/openshift4/ose-oauth-proxy:4.2 
+```
+
+#### issue2： Failed to pull image "registry.redhat.io/openshift4/ose-oauth-proxy:latest"
+
+问题现象： 同样是镜像拉取失败，不过这个我找到了配置的地方。
+
+```bash
+[root@bastion ~]# oc get pod
+NAME                                      READY   STATUS             RESTARTS   AGE
+grafana-54966d55d5-qxbfc                  2/2     Running            0          9m40s
+istio-citadel-6f9b74b754-djrmt            1/1     Running            0          24h
+istio-egressgateway-64ffbdb8c8-jgmpm      1/1     Running            0          18m
+istio-galley-7c6fb78655-2dhr5             1/1     Running            0          22m
+istio-ingressgateway-6c77fdbbd4-65zvs     1/1     Running            0          18m
+istio-pilot-f74779745-g6n7t               2/2     Running            0          19m
+istio-policy-884697ff7-pkh75              2/2     Running            0          21m
+istio-sidecar-injector-66fd9459d9-6cj6p   1/1     Running            0          10m
+istio-telemetry-5d8b8bf754-khdfx          2/2     Running            0          21m
+jaeger-77f49889b4-p274g                   1/2     ImagePullBackOff   0          22m
+kiali-7bd96549bd-x87lr                    1/1     Running            0          7m21s
+prometheus-698fbc5fbf-5hklw               2/2     Running            1          24h
+
+jaeger-77f49889b4-p274g  的 event   
+Normal   BackOff         9m28s (x41 over 19m)  kubelet, master0.ocp4.example.com  Back-off pulling image "registry.redhat.io/openshift4/ose-oauth-proxy:latest"
+```
+
+解决方法：
+注意要在 openshift-operators 这个 project 下，因为 jaeger 部署在这个下面
+
+```bash
+～ oc -n openshift-operators get clusterserviceversions.operators.coreos.com|grep jaeger
+jaeger-operator.v1.17.6                        Red Hat OpenShift Jaeger         1.17.6                             Succeeded
+～ oc -n openshift-operators get pod|grep jaeger
+jaeger-operator-697c7889b-vkd87   1/1     Running   0          20m
+
+# 修改配置
+～ oc -n openshift-operators edit clusterserviceversions.operators.coreos.com jaeger-operator.v1.17.6 
+找到 registry.redhat.io/openshift4/ose-oauth-proxy:latest 改成 registry.example.com:5000/openshift4/ose-oauth-proxy:latest  
+
+之后 jaeger-operator-xx 这个pod 会重建
+
+```
+
+再回到 istio-system project 下，删掉 jaeger-xx pod 重建，就正常了
+```bash
+[root@bastion redhat-operators-manifests]# oc get pod
+NAME                                      READY   STATUS    RESTARTS   AGE
+grafana-54966d55d5-qxbfc                  2/2     Running   0          49m
+istio-citadel-6f9b74b754-djrmt            1/1     Running   0          24h
+istio-egressgateway-64ffbdb8c8-jgmpm      1/1     Running   0          57m
+istio-galley-7c6fb78655-2dhr5             1/1     Running   0          61m
+istio-ingressgateway-6c77fdbbd4-65zvs     1/1     Running   0          57m
+istio-pilot-f74779745-g6n7t               2/2     Running   0          59m
+istio-policy-884697ff7-pkh75              2/2     Running   0          61m
+istio-sidecar-injector-66fd9459d9-6cj6p   1/1     Running   0          49m
+istio-telemetry-5d8b8bf754-khdfx          2/2     Running   0          60m
+jaeger-96d4ff7b4-hx4g8                    2/2     Running   0          5m42s
+kiali-7bd96549bd-x87lr                    1/1     Running   0          46m
+prometheus-698fbc5fbf-5hklw               2/2     Running   1          24h
+```
 
 ### 参考资料
 https://www.servicemesher.com/istio-handbook/concepts/istio.html
 https://docs.openshift.com/container-platform/4.4/service_mesh/service_mesh_install/preparing-ossm-installation.html
 https://access.redhat.com/documentation/zh-cn/openshift_container_platform/4.5/html/service_mesh/service-mesh-installation#preparing-ossm-installation
+
