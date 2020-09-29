@@ -45,14 +45,14 @@ oc adm catalog build \
     --from=registry.redhat.io/openshift4/ose-operator-registry:v4.4 \
     --filter-by-os="linux/amd64" \
     --to=registry.example.com:5000/olm/redhat-operators:v1 \
-    -a /run/user/0/containers/auth.json
+    -a /run/user/0/containers/auth.json \
     --insecure
 
 成功后会有提示
 Pushed sha256:3adf1abfc4788e5ebbd74363e861771c38cfa406491ffad9d2056ca88d35e1c9 to registry.example.com:5000/olm/redhat-operators:v1
 ```
 
---to 是生成的进行，后续如果更新，换个新的tag  
+--to 是生成的镜像，后续如果更新，换个新的tag  
 -a 指定 podman login 生成的认证文件，不知道在哪儿用就搜一下 find / -name auth.json  
 
 官方文档提醒，如果有时遇到这种报错，可忽略
