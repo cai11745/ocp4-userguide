@@ -8,6 +8,7 @@
 * 集群安装与配置管理
   * [4.3 离线部署 DHCP方式](https://github.com/cai11745/k8s-ocp-yaml/blob/master/ocp4/2020-02-25-openshift4.3-install-offline-dhcp.md)
   * [4.4 在线部署 静态IP(支持all-in-one单点)](https://github.com/cai11745/k8s-ocp-yaml/blob/master/ocp4/2020-02-25-openshift4.4-install-online-staticIP-allinone.md)
+  * [离线升级4.5->4.6](./集群安装与管理/离线升级-4.5-to-4.6.md)
   * [AWS公有云安装openshift4](./集群安装与管理/使用redhat-lab在aws上安装openshift4.md)
   * [添加worker node](./集群安装与管理/添加worker-node.md)
 
