@@ -13,9 +13,9 @@ description:
 
 #### 本此部署使用资源
 
-方案还是采用高可用，比官方多了一个base节点，用来搭建部署需要的dns，httpd 等服务，这台系统用Centos7.6，因为centos解决源比较方便，等熟悉部署及所需安装包后可以换成RHEL。
+方案还是采用高可用，比官方多了一个base节点，用来搭建部署需要的dns，pxe 等服务，这台系统用Centos7.6，因为centos解决源比较方便，等熟悉部署及所需安装包后可以换成RHEL。
 
-其他机器都用RHCOS，就是coreos专门针对openshift的操作系统版本。引导光盘为 rhcos-4.7.0-x86_64-live.x86_64.iso  
+其他机器都用RHCOS，就是coreos专门针对openshift的操作系统版本。通过PXE安装，不需要提前安装系统。
 
 |Machine|OS|vCPU|RAM|Storage|IP|
 |-|-|-|-|-|-|
@@ -28,7 +28,7 @@ description:
 |worker-1|RHCOS|4|16 GB|120 GB|192.168.2.35|
 
 节点角色：  
-1台 基础服务节点，用于安装部署所需的 dns，httpd服务。系统不限。同时承担负载均衡，用于负载master节点api及router，功能同3.x。这个服务现在需要自己部署，生产环境也可用硬负载。  
+1台 基础服务节点，用于安装部署所需的 dns，pxe 服务。系统不限。同时承担负载均衡，用于负载master节点api及router，功能同3.x。这个服务现在需要自己部署，生产环境也可用硬负载。  
 1台 部署引导节点 Bootstrap，用于安装openshift集群，在集群安装完成后可以删除。系统RHCOS  
 3台 控制节点 Control plane，即master，通常使用三台部署高可用，etcd也部署在上面。系统RHCOS  
 2台 计算节点 Compute，用于运行openshift基础组件及应用 。系统RHCOS
@@ -287,7 +287,7 @@ systemctl enable haproxy && systemctl start haproxy
 ├── assets
 │   ├── rhcos-4.7.0-x86_64-live-initramfs.x86_64.img
 │   ├── rhcos-4.7.0-x86_64-live-kernel-x86_64
-│   └── rhcos-4.7.0-x86_64-metal.x86_64.raw.gz
+│   └── rhcos-4.7.0-x86_64-live-rootfs.x86_64.img
 ├── groups
 │   ├── bootstrap.json
 │   ├── master1.json
@@ -330,17 +330,16 @@ rootfs: rhcos-<version>-live-rootfs.<architecture>.img
 
 这三个文件放到 /var/lib/matchbox/assets 目录下
 
-把离线安装包里 matchbox 目录下的 groups profiles 挪到 /var/lib/matchbox/
+matchbox 目录下的 groups profiles，参照我的配置文件
+https://github.com/cai11745/ocp4-userguide/tree/master/configurations/matchbox
 
 进入 /var/lib/matchbox/ 目录，分别修改 profiles 和 groups 下的文件， ignition 的文件后面会通过命令生成。
 
-文件参考
-https://github.com/cai11745/k8s-ocp-yaml/tree/master/ocp4/config-files/matchbox
+profiles 目录下修改配置文件，主要确认kernel，initrd 对应rhcos文件名称及 url , 
+install_dev：在不同虚拟化或者物理平台磁盘命名可能不一样，看下当前部署机是sda 还是 vda，rhcos下命名规则应该是一样的
+coreos.live.rootfs_url 这个参数之前4.3 是coreos.inst.image_url，需要注意。
 
-profiles 目录下修改配置文件，主要确认kernel initrd 对应的配置文件名称及 url , 
-install_dev ：在不同虚拟化或者物理平台磁盘命名可能不一样，看下当前部署机是sda 还是 vda，rhcos下命名规则应该是一样的
-
-groups 目录下修改节点配置文件，主要是mac地址和检查文件里的 profiles 参数是否正确
+groups 目录下修改节点配置文件，每个节点一个，主要是mac地址和检查文件里的 profiles参数是否正确
 
 
 启动matchbox 
@@ -456,14 +455,15 @@ openshift-install --dir=/opt/install wait-for bootstrap-complete --log-level deb
 
 #### 安装 bootstarp 
 
-把bootstrap虚拟打开，第一次启动的时候找不到本地系统盘会自动切换到网卡pxe启动。如果没有从pxe启动，进入bios 修改下启动顺序，改成从网络启动  
+把bootstrap虚拟打开，第一次启动的时候找不到本地系统盘会自动切换到网卡pxe启动。如果没有从pxe启动，进入bios  修改下启动顺序，磁盘第一，网络启动第二。  
+不要网络启动第一个，安装过程会重启，不然后面每次都会从网络启动。
 
 待系统安装完成后，bootstrap虚机控制台会停留在登录页面。
 
 在部署机 base 可以通过 ssh 命令进入bootstrap
 
 ```bash
-ssh core@172.28.105.18
+ssh core@192.168.2.30
 
 # 查看运行容器，sudo podman ps, 应该有运行中容器
 # 如果没有在运行的容器， ps -ef 看下是否有podman pull 的进程。异常可参照最下方 Troubleshooting
@@ -484,8 +484,8 @@ tcp6       0      0 :::6443                 :::*                    LISTEN      
 # 以上端口无误，则持续观察 bootkube 服务状态，然后继续安装 master 节点
 journalctl -b -f -u bootkube.service
 
-# 也可以通过haproxy的页面，就是172.28.105.11:9000 可以看到bootstrap的状态变成了绿色
-# 说明这个时候bootstrap 已经部署成功
+也可以通过haproxy的页面，就是192.168.2.29:9000 可以看到bootstrap的状态变成了绿色
+说明这个时候bootstrap 已经部署成功
 ```
 
 **故障诊断思路**  
@@ -498,11 +498,12 @@ bootstrap 节点先查看是否有镜像和容器
 通过haproxy页面查看master节点api及machine-config状态  
 以及通过netstat 查看端口 api  6443， etcd 2379  
 
-部署完成后，从haproxy上看到master-1的api状态异常，master-0 master-2 正常，还不太熟悉服务组件运行方式，我重启master-1后正常了，后续再看。
 
 oc 命令可以看到master状态  
 ```bash
- cp /opt/install/auth/kubeconfig ~/.kube/config  
+mkdir ~/.kube
+cp /opt/install/auth/kubeconfig ~/.kube/config
+
 [root@bastion profiles]# oc get node
 NAME      STATUS   ROLES    AGE   VERSION
 master1   Ready    master   26m   v1.20.0+bafe72f
@@ -523,14 +524,9 @@ systemctl restart haproxy
 ```
 
 #### 安装 worker
+直接启动worker节点即可。  
 
-部署机 bastion 执行命令监控部署状态  
-```bash
-cd ~
-openshift-install --dir=/root/ocp4 wait-for install-complete --log-level debug
-```
-
-当两台worker 在控制台看到已经部署完
+当两台worker 在控制台看到已经部署完。
 
 在部署机之前 get csr 命令，查看node 节点加入申请，批准之，然后就看到了node节点。 大功告成！！！
 
@@ -552,6 +548,51 @@ worker2   Ready    worker   5m17s   v1.20.0+bafe72f
 
 ```
 
+部署机 bastion 执行命令可以确认节点和组件都部署完成。
+```bash
+cd ~
+openshift-install --dir=/opt/install wait-for install-complete --log-level debug
+```
+
+或者手动执行 oc get co 查看所有默认组件(clusteroperators)，都是true 及版本正确即代表部署完成。
+此次部署出现了 co 状态异常，见 Troubleshooting.3
+
+```bash
+[root@bastion ~]# oc get co
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                             4.7.5     True        False         False      44m
+baremetal                                  4.7.5     True        False         False      4h26m
+cloud-credential                           4.7.5     True        False         False      4h52m
+cluster-autoscaler                         4.7.5     True        False         False      4h21m
+config-operator                            4.7.5     True        False         False      4h26m
+console                                    4.7.5     True        False         False      10m
+csi-snapshot-controller                    4.7.5     True        False         False      3h43m
+dns                                        4.7.5     True        False         False      4h19m
+etcd                                       4.7.5     True        False         False      4h23m
+image-registry                             4.7.5     True        False         False      4h16m
+ingress                                    4.7.5     True        False         False      3h52m
+insights                                   4.7.5     True        False         False      4h18m
+kube-apiserver                             4.7.5     True        False         False      4h19m
+kube-controller-manager                    4.7.5     True        False         False      4h19m
+kube-scheduler                             4.7.5     True        False         False      4h22m
+kube-storage-version-migrator              4.7.5     True        False         False      3h53m
+machine-api                                4.7.5     True        False         False      4h21m
+machine-approver                           4.7.5     True        False         False      4h24m
+machine-config                             4.7.5     True        False         False      4h16m
+marketplace                                4.7.5     True        False         False      4h22m
+monitoring                                 4.7.5     True        False         False      7s
+network                                    4.7.5     True        False         False      4h26m
+node-tuning                                4.7.5     True        False         False      4h21m
+openshift-apiserver                        4.7.5     True        False         False      45m
+openshift-controller-manager               4.7.5     True        False         False      4h20m
+openshift-samples                          4.7.5     True        False         False      42m
+operator-lifecycle-manager                 4.7.5     True        False         False      4h21m
+operator-lifecycle-manager-catalog         4.7.5     True        False         False      4h21m
+operator-lifecycle-manager-packageserver   4.7.5     True        False         False      47m
+service-ca                                 4.7.5     True        False         False      4h26m
+storage                                    4.7.5     True        False         False      4h26m
+
+```
 
 #### Web console 登录
 
@@ -666,6 +707,204 @@ openshift-install create ignition-configs --dir=./
 
 
 ```
+
+#### 3. openshift-api，authentication operator false
+ocp集群安装完成后，有几个operator 状态为false，且console 和 openshift 未安装。
+
+oc 命令间隙性响应慢。
+切换 project 及 oc get route -A 会报错
+[root@bastion ]# oc project openshift-apiserver  
+Error from server (ServiceUnavailable): the server is currently unable to handle the request (get projects.project.openshift.io openshift-apiserver)
+
+oc describe co openshift-api 查看message
+APIServicesAvailable: "apps.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+APIServicesAvailable: "authorization.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+
+查到redhat bug，在vmware环境下
+https://access.redhat.com/solutions/5896081
+
+
+[root@bastion ~]# oc get co
+NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
+authentication                                       False       False         True       3h31m
+baremetal                                  4.7.5     True        False         False      3h31m
+cloud-credential                           4.7.5     True        False         False      3h57m
+cluster-autoscaler                         4.7.5     True        False         False      3h27m
+config-operator                            4.7.5     True        False         False      3h31m
+console                                                                                   
+csi-snapshot-controller                    4.7.5     True        False         False      168m
+dns                                        4.7.5     True        False         False      3h24m
+etcd                                       4.7.5     True        False         False      3h29m
+image-registry                             4.7.5     True        False         False      3h21m
+ingress                                    4.7.5     True        False         False      178m
+insights                                   4.7.5     True        False         False      3h23m
+kube-apiserver                             4.7.5     True        False         False      3h25m
+kube-controller-manager                    4.7.5     True        False         False      3h25m
+kube-scheduler                             4.7.5     True        False         False      3h27m
+kube-storage-version-migrator              4.7.5     True        False         False      178m
+machine-api                                4.7.5     True        False         False      3h26m
+machine-approver                           4.7.5     True        False         False      3h29m
+machine-config                             4.7.5     True        False         False      3h22m
+marketplace                                4.7.5     True        False         False      3h27m
+monitoring                                           False       True          True       3h25m
+network                                    4.7.5     True        False         False      3h31m
+node-tuning                                4.7.5     True        False         False      3h26m
+openshift-apiserver                        4.7.5     False       False         False      3h31m
+openshift-controller-manager               4.7.5     True        False         False      3h26m
+openshift-samples                                                                         
+operator-lifecycle-manager                 4.7.5     True        False         False      3h27m
+operator-lifecycle-manager-catalog         4.7.5     True        False         False      3h27m
+operator-lifecycle-manager-packageserver   4.7.5     True        False         False      89s
+service-ca                                 4.7.5     True        False         False      3h31m
+storage                                    4.7.5     True        False         False      3h31m
+[root@bastion ~]# oc describe co openshift-apiserver
+Name:         openshift-apiserver
+Namespace:    
+Labels:       <none>
+Annotations:  exclude.release.openshift.io/internal-openshift-hosted: true
+              include.release.openshift.io/self-managed-high-availability: true
+              include.release.openshift.io/single-node-developer: true
+API Version:  config.openshift.io/v1
+Kind:         ClusterOperator
+Metadata:
+  Creation Timestamp:  2021-04-08T01:55:41Z
+  Generation:          1
+  Managed Fields:
+    API Version:  config.openshift.io/v1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .:
+          f:exclude.release.openshift.io/internal-openshift-hosted:
+          f:include.release.openshift.io/self-managed-high-availability:
+          f:include.release.openshift.io/single-node-developer:
+      f:spec:
+      f:status:
+        .:
+        f:extension:
+    Manager:      cluster-version-operator
+    Operation:    Update
+    Time:         2021-04-08T01:55:41Z
+    API Version:  config.openshift.io/v1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:status:
+        f:conditions:
+        f:relatedObjects:
+        f:versions:
+    Manager:         cluster-openshift-apiserver-operator
+    Operation:       Update
+    Time:            2021-04-08T02:22:52Z
+  Resource Version:  109382
+  Self Link:         /apis/config.openshift.io/v1/clusteroperators/openshift-apiserver
+  UID:               b1e68502-489c-439d-92c5-ded7167b5290
+Spec:
+Status:
+  Conditions:
+    Last Transition Time:  2021-04-08T02:29:06Z
+    Message:               All is well
+    Reason:                AsExpected
+    Status:                False
+    Type:                  Degraded
+    Last Transition Time:  2021-04-08T02:44:46Z
+    Message:               All is well
+    Reason:                AsExpected
+    Status:                False
+    Type:                  Progressing
+    Last Transition Time:  2021-04-08T02:22:59Z
+    Message:               APIServicesAvailable: "apps.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+APIServicesAvailable: "authorization.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+APIServicesAvailable: "image.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+APIServicesAvailable: "project.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+APIServicesAvailable: "security.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+APIServicesAvailable: "template.openshift.io.v1" is not ready: 503 (the server is currently unable to handle the request)
+    Reason:                APIServices_Error
+    Status:                False
+    Type:                  Available
+    Last Transition Time:  2021-04-08T02:22:52Z
+    Message:               All is well
+    Reason:                AsExpected
+    Status:                True
+    Type:                  Upgradeable
+  Extension:               <nil>
+  Related Objects:
+    Group:      operator.openshift.io
+    Name:       cluster
+    Resource:   openshiftapiservers
+    Group:      
+    Name:       openshift-config
+    Resource:   namespaces
+    Group:      
+    Name:       openshift-config-managed
+    Resource:   namespaces
+    Group:      
+    Name:       openshift-apiserver-operator
+    Resource:   namespaces
+    Group:      
+    Name:       openshift-apiserver
+    Resource:   namespaces
+    Group:      
+    Name:       openshift-etcd-operator
+    Resource:   namespaces
+    Group:      
+    Name:       host-etcd-2
+    Namespace:  openshift-etcd
+    Resource:   endpoints
+    Group:      controlplane.operator.openshift.io
+    Name:       
+    Namespace:  openshift-apiserver
+    Resource:   podnetworkconnectivitychecks
+    Group:      apiregistration.k8s.io
+    Name:       v1.apps.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.authorization.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.build.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.image.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.project.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.quota.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.route.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.security.openshift.io
+    Resource:   apiservices
+    Group:      apiregistration.k8s.io
+    Name:       v1.template.openshift.io
+    Resource:   apiservices
+  Versions:
+    Name:     operator
+    Version:  4.7.5
+    Name:     openshift-apiserver
+    Version:  4.7.5
+Events:       <none>
+
+
+解决方法：
+设置一个环境变量，该变量存储所有群集节点的IP：
+```bash
+ADDRESSES=$(oc get nodes -o=jsonpath='{.items[*].status.addresses[0].address}')      
+
+运行以下命令以disable在所有群集节点上卸载VxLAN：
+
+for ADDRESS in $ADDRESSES; do 
+ssh core@$ADDRESS sudo ethtool -K <primary-interface> tx-udp_tnl-segmentation off
+ssh core@$ADDRESS sudo ethtool -K <primary-interface> tx-udp_tnl-csum-segmentation off
+done
+```
+注意：将替换为<primary-interface>群集节点上的接口名称。
+执行上述步骤后，的状态clusteroperators应为Available：
+
 
 #### 参考链接：  
 https://access.redhat.com/documentation/zh-cn/openshift_container_platform/4.7/html-single/installing/index#ipi-install-troubleshooting-cluster-nodes-will-not-pxe_ipi-install-troubleshooting
