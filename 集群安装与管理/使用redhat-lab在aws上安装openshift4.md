@@ -4,6 +4,7 @@
 前提：具备AWS账号（好像暂不支持中国区）
 我这边是使用的  OPENTLC lab，由红帽提供给合作伙伴的练习环境。  
 参照内容： redhat partner center 学习平台 - openshift4 install。
+https://training-lms.redhat.com/lmt/clmsbrowsev2.prMain?in_sessionid=155AAA0JA8A3081A
 
 ### 环境准备
 在 opentlc 练习平台准备基础环境。
@@ -53,7 +54,7 @@ rm -rf /root/awscli-bundle /root/awscli-bundle.zip
 
 ```bash
 # Get the OpenShift installer binary
-OCP_VERSION=4.4.3
+OCP_VERSION=4.6.16
 wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OCP_VERSION}/openshift-install-linux-${OCP_VERSION}.tar.gz
 tar zxvf openshift-install-linux-${OCP_VERSION}.tar.gz -C /usr/bin
 rm -f openshift-install-linux-${OCP_VERSION}.tar.gz /usr/bin/README.md

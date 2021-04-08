@@ -1,0 +1,36 @@
+{
+"id": "master",
+
+"name": "OCP 4 – Master",
+
+"ignition_id": "master.ign",
+
+"boot": {
+
+"kernel": "/assets/rhcos-4.7.0-x86_64-live-kernel-x86_64",
+
+"initrd": [
+
+"/assets/rhcos-4.7.0-x86_64-live-initramfs.x86_64.img"
+
+],
+
+"args": [
+
+"ip=dhcp",
+
+"rd.neednet=1",
+
+"coreos.inst=yes",
+
+"coreos.inst.install_dev=sda",
+
+"coreos.live.rootfs_url=http://bastion.ocp4.example.com:8080/assets/rhcos-4.7.0-x86_64-live-rootfs.x86_64.img",
+
+"coreos.inst.ignition_url=http://bastion.ocp4.example.com:8080/ignition?mac=${mac:hexhyp}"
+
+]
+
+}
+
+}

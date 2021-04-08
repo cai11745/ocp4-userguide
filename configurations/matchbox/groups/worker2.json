@@ -1,0 +1,15 @@
+
+{
+"id": "worker2",
+
+"name": "OCP 4 Worker2",
+
+"profile": "cptnod",
+
+"selector": {
+
+"mac": "00:50:56:95:fc:41"
+
+}
+
+}

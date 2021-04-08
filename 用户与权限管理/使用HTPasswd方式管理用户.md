@@ -37,10 +37,10 @@ htpass-secret   Opaque   1      25s
 ```
 
 #### 1.3 创建 oauth CR
-创建一个 oauth  Custom Resource (CR) ，使用上面的 htpasswd
+修改 oauth  Custom Resource (CR) ，使用上面的 htpasswd
 
 ```bash
-cat oauth-htpasswd.yaml
+oc edit oauth cluster
 
 apiVersion: config.openshift.io/v1
 kind: OAuth
@@ -59,15 +59,6 @@ spec:
 1. 这是显示在登录页面的字段
 2. 这个要和上一步得 secret 名称匹配
 
-导入文件，可以会有个 warning，可忽略
-
-```bash
-oc apply -f oauth-htpasswd.yaml
-
-# 忽略 warning
-Warning: oc apply should be used on resources created by either oc create --save-config or oc apply.
-
-```
 
 #### 1.4 测试新用户登录
 通过命令或者 web 页面登录测试新用户。 这些用户进去之后都只能自己新建 projecct 操作，没有赋权全局。
