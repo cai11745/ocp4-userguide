@@ -31,11 +31,13 @@
 * 服务网格ServiceMesh
   * [ServiceMesh简介与安装](./服务网格ServiceMesh/ServiceMesh简介与istio安装.md)
  
+* DevOps
+  * [Pipeline(Tekton)简介与场景示例](./DevOps/openshift-pipeline-Tekton简介与场景示例.md)
+
 * 资源管理--未就绪
 
 * 应用管理--未就绪
 
-* devops
 ----
 
 * [Last part without title]()
