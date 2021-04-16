@@ -902,7 +902,7 @@ ssh core@$ADDRESS sudo ethtool -K <primary-interface> tx-udp_tnl-segmentation of
 ssh core@$ADDRESS sudo ethtool -K <primary-interface> tx-udp_tnl-csum-segmentation off
 done
 ```
-注意：将替换为<primary-interface>群集节点上的接口名称。
+注意：将替换为<primary-interface>群集节点上的接口名称，如 ens192  
 执行上述步骤后，的状态clusteroperators应为Available：
 
 

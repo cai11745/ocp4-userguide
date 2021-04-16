@@ -1,6 +1,6 @@
 
 openshift sample operator 负责安装和更新 imagestream 和 template。  
-通过openshift 自带的模板 catalog 或者 from git，database， 都会使用到imagestream 和 template。      
+通过openshift 自带的模板 catalog 或者 from git，database， 都会使用到imagestream 和 template  
 离线环境下 imagestream 关联的镜像在初始部署中未曾下载， 需要在部署完成后手动补充，并修改镜像仓库地址指向。
 
 ### 1. 获取镜像列表并同步到本地仓库

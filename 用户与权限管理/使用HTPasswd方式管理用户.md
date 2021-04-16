@@ -48,7 +48,7 @@ metadata:
   name: cluster
 spec:
   identityProviders:
-  - name: my_htpasswd_provider  #1 
+  - name: htpasswd_provider  #1 
     mappingMethod: claim 
     type: HTPasswd
     htpasswd:
@@ -111,13 +111,13 @@ oc create secret generic htpass-secret --from-file=htpasswd=users.htpasswd --dry
 给 user2 cluster-reader 权限，可以查看所有 project 下的资源
 给 user3 赋予 openshift-monitoring project 管理员权限
 
-需要user2， user3 先登录过一次，不然 ocp 的 user 资源对象里找不到他，加不上权限
-
 ```bash
 oc adm policy add-cluster-role-to-user cluster-admin user1
 oc adm policy add-cluster-role-to-user cluster-reader user2
 oc adm policy add-role-to-user admin user3 -n openshift-monitoring
 ```
+
+如果用户还没有登录过，上面命令会提示 Warning: User 'xx' not found，忽略。
 
 ### 2. 通过 web 页面配置 oauth 采用 htpasswd 认证
 除了通过命令导入也可以通过页面，前提是先创建好 htpasswd 文件，等于说 secret 和 oauth 的资源是web 页面帮助创建的。  

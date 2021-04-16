@@ -1,11 +1,12 @@
 ## 使用 nfs-client-provisioner 提供动态存储 storageclass
-通常我们使用 nfs 作为openshift 存储的时候，都是需要手动创建pv pvc，使用 nfs-client-provisioner 可以将 nfs server 以storageclass 方式提供，应用在使用存储时，只需指定使用 claim，pv和pvc 将由 nfs-client-provisioner 自动创建。   
+通常我们使用 nfs 作为openshift 存储的时候，都是需要手动创建pv pvc，使用 nfs-client-provisioner 可以将 nfs server 以storageclass 方式提供，应用在使用存储时，只需指定使用 claim，pv和pvc 将由 nfs-client-provisioner 自动创建。  
 PV以 ${namespace}-${pvcName}-${pvName}的命名格式提供（在NFS服务器上）  
 PV回收的时候以 archieved-${namespace}-${pvcName}-${pvName} 的命名格式（在NFS服务器上）  
 
 这个步骤建议在集群部署完了就操作，后续内部镜像仓库、jenkins 等都会用到持久化存储。
- 
+
 ### 1. 部署 nfs server
+
 若已有nfs server 或者 nas 跳过此步骤。  
 这边把nfs server 部署在 bastion 节点，关闭firewalld 和 selinux  
 
@@ -38,25 +39,26 @@ rm -rf /tmp/123/t1.txt
 ### 2. 部署nfs-client-provisioner
 前提条件是已有 NFS服务器，并且NFS服务器与Openshift的节点都能网络连通。
 
-https://github.com/kubernetes-incubator/external-storage
+https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner.git
 
-把上面整个 git clone 下来，进入 nfs-client, 安装文件在 deploy 目录
+把上面整个 git clone 下来，安装文件在 deploy 目录
 
 安装到 default namespace
 
 ```bash
-cd nfs-client/deploy/
+cd deploy/
 oc project default
 # Set the subject of the RBAC objects to the current namespace where the provisioner is being deployed
 NAMESPACE=`oc project -q`
-sed -i'' "s/namespace:.*/namespace: $NAMESPACE/g" rbac.yaml
-oc create -f rbac.yaml
-oc adm policy add-scc-to-user hostmount-anyuid system:serviceaccount:$NAMESPACE:nfs-client-provisioner
+sed -i'' "s/namespace:.*/namespace: $NAMESPACE/g" ./deploy/rbac.yaml
+oc create -f deploy/rbac.yaml
+oc create role use-scc-hostmount-anyuid --verb=use --resource=scc --resource-name=hostmount-anyuid -n $NAMESPACE
+oc adm policy add-role-to-user use-scc-hostmount-anyuid system:serviceaccount:$NAMESPACE:nfs-client-provisioner
 ```
 
 修改 deployment.yaml 中nfs server 的地址和路径  
-  env 里的 NFS_SERVER 为 192.168.2.19 和 NFS_PATH 为 /nfs/storageclass
-  volumes 里得 nfs.server 为 192.168.2.19 和 nfs.path 为 /nfs/storageclass  
+  env 里的 NFS_SERVER 为 192.168.2.29 和 NFS_PATH 为 /nfs/storageclass
+  volumes 里得 nfs.server 为 192.168.2.29 和 nfs.path 为 /nfs/storageclass  
 只有一个 storageclass 情况下，PROVISIONER_NAME 不需要改，和下面 class.yaml 中 provisioner 匹配  
 
 ```bash
@@ -93,13 +95,13 @@ spec:
             - name: PROVISIONER_NAME
               value: fuseim.pri/ifs
             - name: NFS_SERVER
-              value: 192.168.2.19
+              value: 192.168.2.29
             - name: NFS_PATH
               value: /nfs/storageclass
       volumes:
         - name: nfs-client-root
           nfs:
-            server: 192.168.2.19
+            server: 192.168.2.29
             path: /nfs/storageclass
 ```
 
