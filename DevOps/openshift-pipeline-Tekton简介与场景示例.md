@@ -106,7 +106,7 @@ tekton-triggers-webhook-6d6cfb6568-gl779         1/1     Running   0          7h
 - 为应用程序创建并定义pipeline。
 - 使用持久化存储添加到pipeline的workspace，以保存中间数据，如代码、制品。
 - 创建一个 PipelineRun 对象来实例化并调用pipeline。
-- 添加tigger以捕获源仓库中的事件。（本文不包含，下一篇做）
+- 添加trigger以捕获源仓库中的事件。（本文不包含，下一篇做）
 
 使用redhat 官网提供的示例， pipelines-tutorial 来演示。这个示例使用一个简单的应用程序，它由以下部分组成：
 
