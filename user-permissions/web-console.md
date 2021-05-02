@@ -31,5 +31,5 @@ openshift-ingress                                       router-default-679488d97
 JzPpM-hVUJn-o2PD7-RKtoe
 ```
 
-![console-overview](../images/user_permissions/console-overview.png)
+![console-overview](../images/user-permissions/console-overview.png)
 

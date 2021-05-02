@@ -1,5 +1,5 @@
-## 创建内部image_registry并使用持久化存储
-按照官方说明，如果安装的时候没有提供共享存储，为了保证 openshift-installer 的安装完成，OpenShift Image Registry Operator 将自身配置为 Removed。 就是说没有安装内部image_registry。  
+## 创建内部image-registry并使用持久化存储
+按照官方说明，如果安装的时候没有提供共享存储，为了保证 openshift-installer 的安装完成，OpenShift Image Registry Operator 将自身配置为 Removed。 就是说没有安装内部image-registry。  
 所以我们需要手动来配置一下。  
 
 操作基于 openshift4.7  
@@ -17,11 +17,11 @@ oc patch configs.imageregistry.operator.openshift.io cluster --type merge --patc
 ### 2. 存储准备
 对于不提供默认存储的平台，Image Registry Operator 最初将不可用。安装后，您必须配置 registry 使用的存储，这样 Registry Operator 才可用。
 
-使用storageclass 提供动态存储，或者提前手动创建一个 100Gi的 RWX 属性的pv，用作给image_registry挂载。
+使用storageclass 提供动态存储，或者提前手动创建一个 100Gi的 RWX 属性的pv，用作给image-registry挂载。
 
 [nfs-provisioner提供storageclass动态存储](../storage/nfs-provisioner提供storageclass动态存储.md)
 
-如果没有持久化存储，使用 emptydir，但是image_registry这个 pod 迁移或重建后数据就丢了，配置方法见下文。 empty 模式下副本数不允许超过1
+如果没有持久化存储，使用 emptydir，但是image-registry这个 pod 迁移或重建后数据就丢了，配置方法见下文。 empty 模式下副本数不允许超过1
 
 ### 3. 创建内部仓库
 确认当前没有registry的pod，operator 那个不是仓库服务

@@ -13,7 +13,7 @@ curation（内容管理） - 此组件按日志时间进行筛检，主要用于
 event routing - 用来把 OpenShift Container Platform 的事件转发到集群日志记录的组件。当前的实现是 Event Router。 （下文不涉及此内容）
 
 如果集群可以联网，可以直接在 web console， operatorhub 页面部署，需要用到 Elasticsearch Operator 和 Cluster Logging Operator。  
-离线环境，需先准备离线的 operatorhub 环境，可参照文章 [离线部署operatorhub并批量导入operator](../application_store/离线部署operatorhub并批量导入operator.md)
+离线环境，需先准备离线的 operatorhub 环境，可参照文章 [离线部署operatorhub并批量导入operator](../application-store/离线部署operatorhub并批量导入operator.md)
 
 ### 安装 Elasticsearch Operator
 在 web console 页面，选择 Operators - OperatorHub，找到 Elasticsearch Operator 点击 Install  
@@ -184,9 +184,9 @@ https://docs.openshift.com/container-platform/4.3/logging/config/cluster-logging
 EFK 部署成功后，在 pod 详情，logs 页面会多出一个“Show in Kibana”按钮，点击会跳转到 kibana 页面
 
 首次进入 kibana 需要授权，并手动创建索引规则，会看到有 app-xx infra-xx 的索引，如果看不到可以等等，es 那边还没创建好  
-![pod-logs](../images/logging_and_monitoring/pod-log-kibana-button.png)
+![pod-logs](../images/logging-and-monitoring/pod-log-kibana-button.png)
 
-![kibana](../images/logging_and_monitoring/pod-log-on-kibana.png)
+![kibana](../images/logging-and-monitoring/pod-log-on-kibana.png)
 
 也可以在 kibana 页面自己根据规则进行日志检索
 

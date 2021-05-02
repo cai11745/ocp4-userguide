@@ -33,7 +33,7 @@ oc get operatorhub -o yaml
 以 redhat-operators 为例  
 
 #### 2.1 准备 operatorhub 镜像
-这个在可联网的节点上做，主要目的是获取镜像，镜像里面是对应源 比如 redhat-operators 下的 operator ，就是一堆yaml 文件的打包，将来operator hub 的页面展示也依赖于这个镜像。如果要部署到离线openshift集群，将最终的镜像导入到集群相应的外部image_registry即可。    
+这个在可联网的节点上做，主要目的是获取镜像，镜像里面是对应源 比如 redhat-operators 下的 operator ，就是一堆yaml 文件的打包，将来operator hub 的页面展示也依赖于这个镜像。如果要部署到离线openshift集群，将最终的镜像导入到集群相应的外部image-registry即可。    
 先登录私有仓库和redhat 仓库  
 
 ```bash
@@ -64,7 +64,7 @@ Uploading ... 244.9kB/s
 ```
 
 #### 2.2 导入 operator 镜像
-这个同样需要在可联网的节点执行。上一步我们获取到了一个镜像，其中是对应源的 operator包的集合，但是每个 operator 中定义的image_registry的地址都是外网地址或者redhat的地址，同步镜像方法有两种下文会介绍，方法2可以选择性同步。我们通过以下命令完成三件事情：
+这个同样需要在可联网的节点执行。上一步我们获取到了一个镜像，其中是对应源的 operator包的集合，但是每个 operator 中定义的image-registry的地址都是外网地址或者redhat的地址，同步镜像方法有两种下文会介绍，方法2可以选择性同步。我们通过以下命令完成三件事情：
 1. 将所有operator 中定义的镜像下载到私有仓库  
 2. 生成了一个文件imageContentSourcePolicy.yaml， mirror文件，用于导入到ocp 中，将外部仓库地址映射到我们的私有仓库  
 3. 生成了一个mapping.txt， 告诉我们所有的外部镜像地址和其对应的私有仓库地址  
@@ -271,15 +271,15 @@ serverless-operator                 My Operator Catalog   4m1s
 
 至此，大功告成，可以在web console 页面的 operatorhub 进行操作了，只导入一个 redhat-operators 源，能看到47个operator。最终，redhat-marketplace 这个由于无法获取镜像没导入，其他三个源都导入完成是 292个。 
 
-![operatorhub-redhat-operators](../images/application_store/operatorhub-redhat-operators.png)
+![operatorhub-redhat-operators](../images/application-store/operatorhub-redhat-operators.png)
 
 ### 3. 测试通过 operatorhub 部署应用  
 
 随便找一个 operator 测试一下部署即可。  
 
 这边使用 cluster-logging 部署了一下。这个只是一个监听自定义服务的一个进程。  
-![logging-installed](../images/application_store/operator-logging-installed.png)
-![logging-pod](../images/application_store/operator-logging-pod.png)
+![logging-installed](../images/application-store/operator-logging-installed.png)
+![logging-pod](../images/application-store/operator-logging-pod.png)
 
 真实的日志收集组件，日志存储、日志展示模块，在 Installed operator 的详情页进行创建。  
-完整的日志系统部署与使用在“logging_and_monitoring”章节会介绍。  
+完整的日志系统部署与使用在“logging-and-monitoring”章节会介绍。  

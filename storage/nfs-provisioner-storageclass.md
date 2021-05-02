@@ -3,7 +3,7 @@
 PV以 ${namespace}-${pvcName}-${pvName}的命名格式提供（在NFS服务器上）  
 PV回收的时候以 archieved-${namespace}-${pvcName}-${pvName} 的命名格式（在NFS服务器上）  
 
-这个步骤建议在集群部署完了就操作，后续内部image_registry、jenkins 等都会用到持久化存储。
+这个步骤建议在集群部署完了就操作，后续内部image-registry、jenkins 等都会用到持久化存储。
 
 ### 1. 部署 nfs server
 

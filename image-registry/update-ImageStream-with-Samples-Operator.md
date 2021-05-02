@@ -1,7 +1,7 @@
 
 openshift sample operator 负责安装和更新 imagestream 和 template。  
 通过openshift 自带的模板 catalog 或者 from git，database， 都会使用到imagestream 和 template  
-离线环境下 imagestream 关联的镜像在初始部署中未曾下载， 需要在部署完成后手动补充，并修改image_registry地址指向。
+离线环境下 imagestream 关联的镜像在初始部署中未曾下载， 需要在部署完成后手动补充，并修改image-registry地址指向。
 
 ### 1. 获取镜像列表并同步到本地仓库
 系统自带的imagestream 都在名为openshift 这个 project 下  
@@ -49,7 +49,7 @@ podman login --authfile /root/pull-secret.json registry.redhat.io
 for i in `cat imagelist.txt`; do oc image mirror -a /root/pull-secret.json registry.redhat.io/$i registry.example.com:5000/$i; done
 ```
 
-镜像同步完成后，image_registry数据文件 /opt/registry/data 大小约 70G
+镜像同步完成后，image-registry数据文件 /opt/registry/data 大小约 70G
 
 ### 2. 修改sample operator 配置以更新imagestream
 
@@ -108,10 +108,10 @@ oc describe co openshift-samples
 ### 3. 通过 template 发布 mysql （可选项）
 在 console 页面切到 developer 角色，选择 mysql 的模板，模板会使用到 mysql 的imagestream，可以测试下镜像是否导入成功  
 搜索mysql，有存储选左边的，没有可用存储就选右边的  
-![catalog-mysql](../images/image_registry/catalog-mysql-no-pv.png)
+![catalog-mysql](../images/image-registry/catalog-mysql-no-pv.png)
 
 发布完成后，在 Administrator 角色，Workloads -- pods 可以查看到最终运行的 mysql 实例  
-![pod-mysql](../images/image_registry/mysql-deploy-from-template.png)
+![pod-mysql](../images/image-registry/mysql-deploy-from-template.png)
 
 ### 4. FAQ
 1. imagestream 指向私有仓库 X509  

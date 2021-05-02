@@ -37,7 +37,7 @@ https://github.com/cai11745/k8s-ocp-yaml/blob/master/ocp4/2020-02-25-openshift4.
 
 顺序就是先准备基础节点，包括需要的dns、文件服务器、引导文件等，然后安装引导机 bootstrap，再后面就是 master， 再 node
 
-### 安装准备-image_registry
+### 安装准备-image-registry
 
 #### 安装base基础组件节点
 |base|centos7.6|4|8GB|100 GB|192.168.2.20|

@@ -217,7 +217,7 @@ spec:
 至此 servicemesh istio 框架部署完成，下一步将通过 bookinfo demo 来进一步熟悉 istio 架构和使用。
 
 ### FAQ
-两次问题都是镜像拉取失败，离线ocp4 环境，如果使用在线redhatimage_registry不会存在这个问题，那种情况用不到mirror功能。  
+两次问题都是镜像拉取失败，离线ocp4 环境，如果使用在线redhatimage-registry不会存在这个问题，那种情况用不到mirror功能。  
 原因是ocp4 的mirror 功能不支持 tag 方式，只支持 digest 也就是 @sha256 这种方式  
 官方说明在此：
 https://bugzilla.redhat.com/show_bug.cgi?id=1790798
