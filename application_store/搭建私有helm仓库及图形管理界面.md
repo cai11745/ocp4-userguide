@@ -9,9 +9,9 @@ helm chart 能够很好的封装和管理我们的 kubernetes 应用，可以实
 
 Helm chart对仓库的要求并不高，需要你对外提供yaml文件和tar文件的web服务即可。helm2 原本是带了本地仓库功能，helm3 移除了这部分，将他变成了一个纯粹的应用管理工具。  
 
-像 harbor镜像仓库，JFrog Artifactory(制品仓库，镜像仓库) 都包含了 helm 商店的功能，如果同时对镜像仓库和制品管理有需求，可以选择上面两款产品，都提供免费社区版。  
+像 harborimage_registry，JFrog Artifactory(制品仓库，image_registry) 都包含了 helm 商店的功能，如果同时对image_registry和制品管理有需求，可以选择上面两款产品，都提供免费社区版。  
 
-如果不需要上面两者的镜像仓库功能，可以使用在线的github 或 gitlab
+如果不需要上面两者的image_registry功能，可以使用在线的github 或 gitlab
 https://www.bookstack.cn/read/kubernetes-handbook-201910/practice-create-private-charts-repo.md
 
 也可以是本地私有化部署的 gitlab 
@@ -176,9 +176,9 @@ ng-ingress-nginx-ingress-default-backend   ClusterIP      172.30.91.91     <none
 通过浏览器访问 k8s节点ip:31537  
 标记 deprecated: true 的charts，即为弃用的，不会展示在页面  
 
-![monocular-ui-1](../images/应用商店/monocular-ui-1.png)
+![monocular-ui-1](../images/application_store/monocular-ui-1.png)
 
-![monocular-ui-2](../images/应用商店/monocular-ui-2.png)
+![monocular-ui-2](../images/application_store/monocular-ui-2.png)
 
 默认是1小时同步一次repo，可以在helm install 的时候修改 values.yaml，比如这样，5分钟同步一次
 
@@ -206,11 +206,11 @@ https://github.com/kubeapps/kubeapps
 注意访问的时候是使用 kubeapps 这个svc 的nodeport， 不依赖于ingress  
 
 查看通过 helm 发布的应用，支持按照 namespace 区分  
-![monocular-ui-2](../images/应用商店/kubeapps-applications.png)
+![monocular-ui-2](../images/application_store/kubeapps-applications.png)
 
 这块和 monocular 一样  
-![monocular-ui-2](../images/应用商店/kubeapps-catalog.png)
+![monocular-ui-2](../images/application_store/kubeapps-catalog.png)
 
 可以通过页面添加仓库
-![monocular-ui-2](../images/应用商店/kubeapps-repositories.png)
+![monocular-ui-2](../images/application_store/kubeapps-repositories.png)
 

@@ -3,7 +3,7 @@
 PV以 ${namespace}-${pvcName}-${pvName}的命名格式提供（在NFS服务器上）  
 PV回收的时候以 archieved-${namespace}-${pvcName}-${pvName} 的命名格式（在NFS服务器上）  
 
-这个步骤建议在集群部署完了就操作，后续内部镜像仓库、jenkins 等都会用到持久化存储。
+这个步骤建议在集群部署完了就操作，后续内部image_registry、jenkins 等都会用到持久化存储。
 
 ### 1. 部署 nfs server
 
@@ -200,7 +200,7 @@ spec:
 在 web 页面，Administrator 角色，Storage--PVC， 点 create， 选择 storageclass，填写 pvc 的name 、读写属性、容量  
 完成后会创建 pvc 和 pv
 
-![create-pvc-storageclass](../images/存储管理/create-pvc-storageclass.png)
+![create-pvc-storageclass](../images/storage/create-pvc-storageclass.png)
 
 #### 4.3 应用中 volume 指定使用 claim （用于statefulset）
 

@@ -660,7 +660,7 @@ Jan 10 00:28:49 localhost release-image-download.sh[1201]: Error: error pulling 
 使用 curl 命令测试接口却没有返回，说明仓库对外服务有异常  
 curl -u root:password -k https://registry.example.com:5000/v2/_catalog
 
-在 base 节点重启镜像仓库服务后，还是异常，后把仓库服务的容器删除重建后，可以在 bootstrap 节点正常 pull 镜像
+在 base 节点重启image_registry服务后，还是异常，后把仓库服务的容器删除重建后，可以在 bootstrap 节点正常 pull 镜像
 
 正式环境中，可以考虑使用 harbor 代替 registry 服务，也能更好的解决权限和高可用的问题，harbor 自带高可用方案，可主备自动同步。
 

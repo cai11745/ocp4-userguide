@@ -39,11 +39,11 @@ yum install curl jq graphviz
 4.5.7 -> 4.6.12 标准流程是这样的，正式环境请严格遵循规范。
 
 4.5.7 -> 4.5.24 -> 4.6.12
-![cluster-update2](../images/集群安装与管理/4.5-to-4.6.png)
+![cluster-update2](../images/cluster_install_and_managerment/4.5-to-4.6.png)
 
 4.3.0 的升级路径  
 4.3.0 -> 4.3.35 -> 4.4.32
-![cluster-update2](../images/集群安装与管理/4.3-to-4.4.png)
+![cluster-update2](../images/cluster_install_and_managerment/4.3-to-4.4.png)
 
 官方指导升级路径链接  
 https://access.redhat.com/solutions/4606811
@@ -76,7 +76,7 @@ mv oc kubectl /usr/local/bin/
 Client Version: 4.6.12
 ```
 
-#### 运行一个本地的镜像仓库，用于将更新的镜像同步到本地
+#### 运行一个本地的image_registry，用于将更新的镜像同步到本地
 
 ```bash
 yum install podman -y
@@ -105,11 +105,11 @@ update-ca-trust extract
 htpasswd -bBc /opt/registry/auth/htpasswd root password
 ```
 
-先准备镜像仓库的image， podman pull docker.io/library/registry:2.6
+先准备image_registry的image， podman pull docker.io/library/registry:2.6
 
-运行内部镜像仓库  
+运行内部image_registry  
 ```bash
-# 运行镜像仓库服务，注意最下面一行我改成了 registry:2.6  
+# 运行image_registry服务，注意最下面一行我改成了 registry:2.6  
 podman run --name mirror-registry -p 5000:5000 \
      -v /opt/registry/data:/var/lib/registry:z \
      -v /opt/registry/auth:/auth:z \
@@ -233,7 +233,7 @@ oc adm release mirror -a ${LOCAL_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/m
 
 将版本镜像镜像(mirror)到内部容器 registry。
 
-如果openshift的镜像仓库主机无法访问互联网，请执行以下操作：
+如果openshift的image_registry主机无法访问互联网，请执行以下操作：
 ```bash
 # 将镜像和配置清单镜像存到本地目录中：
 oc adm release mirror -a ${LOCAL_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/mirror quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE}
@@ -247,7 +247,7 @@ oc adm release mirror -a ${LOCAL_SECRET_JSON} --to-dir=${REMOVABLE_MEDIA_PATH}/m
 
 # 将介质上传到受限网络环境中，并将镜像上传到本地容器 registry。
 # 对于 REMOVABLE_MEDIA_PATH，您必须使用与镜像镜像时指定的同一路径。
-# 这段在离线环境的openshit 镜像仓库执行，需再次执行相关环境变量，本地仓库的相关配置依环境定义
+# 这段在离线环境的openshit image_registry执行，需再次执行相关环境变量，本地仓库的相关配置依环境定义
 oc image mirror  -a ${LOCAL_SECRET_JSON} --from-dir=${REMOVABLE_MEDIA_PATH}/mirror "file://openshift/release:${OCP_RELEASE}*" ${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} 
 
 这一步可能会出现这个报错，是个bug，可以在 oc image mirror 命令前加 GODEBUG=x509ignoreCN=0 这个参数来回避
@@ -259,7 +259,7 @@ error: unable to connect to registry.example.com:5000/ocp4/openshift4: Get "http
 ```
 
 =====此段为在线更新，离线环境忽略====
-在线环境：对于openshift镜像仓库主机可以联网的情况，可以将发行镜像直接推送到本地 registry，并使用以下命令将配置映射应用到集群：
+在线环境：对于openshiftimage_registry主机可以联网的情况，可以将发行镜像直接推送到本地 registry，并使用以下命令将配置映射应用到集群：
 
 ```bash
 $ oc adm release mirror -a ${LOCAL_SECRET_JSON} --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} \
@@ -319,7 +319,7 @@ Updating to release image registry.example.com:5000/ocp4/openshift4@sha256:5c361
 
 查看升级进度，也可以在 web 页面查看，Administration -- Cluster Settings 也可以看到进度，clusteroperator、master 及node  
 
-![cluster-update1](../images/集群安装与管理/cluster-update1.png)
+![cluster-update1](../images/cluster_install_and_managerment/cluster-update1.png)
 
 ```bash
 [root@bastion tmp]# oc get clusterversion
@@ -385,7 +385,7 @@ version   4.6.12    True        False         9h      Cluster version is 4.6.12
 我手动重启了下 worker2，结果worker0，1 都变成 not ready了。
 我的环境资源比较紧张，节点动不动就 hung 或者 not ready，新组了一台主机，还没就绪。
 ESXi 控制台看了下，CPU已经拉满了。。。这台式机I7 9700 装ESXi还是有点不够顶。。。
-![esxi-cpu100](../images/集群安装与管理/esxi-cpu100.png)
+![esxi-cpu100](../images/cluster_install_and_managerment/esxi-cpu100.png)
 
 然后把几台 worker 节点强制重启后，状态变回了 ready，但是版本还是没有更新。
 
@@ -405,7 +405,7 @@ Worker 3/3
 Channe 按钮那边一直提示我从4.5 换成4.6，点了一下  
 然后页面从更新状态的展示，变成了现状的展示，最下面还有更新记录。
 
-![cluster-update2](../images/集群安装与管理/cluster-update2.png)
+![cluster-update2](../images/cluster_install_and_managerment/cluster-update2.png)
 
 ### FAQ
 #### 1. 更新中断，operator-lifecycle-manager-packageserver 更新失败

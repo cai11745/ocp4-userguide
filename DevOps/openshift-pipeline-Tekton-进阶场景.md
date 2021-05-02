@@ -1,3 +1,5 @@
+
+
 OpenShift Pipeline 是一种云原生，持续集成和交付（CI/CD）解决方案，使用Tekton构建pipeline。  
 
 实现了以模块化方式从源码到应用运行态的自动化流程， 源码->制品->容器镜像->应用发布。并可自定义穿插其他模块，如代码扫描、镜像安全、消息推送等。  
@@ -432,6 +434,65 @@ step-digest-to-results
 
 这是启动 pipeline 时候 IMAGE name 写的不对，如果IMAGE 只写 vote-api 就会出现上面的镜像，镜像就会默认推送到docker.io 当然会没有权限。
 把IMAGE 写完整即可 image-registry.openshift-image-registry.svc:5000/pipelines-tutorial/vote-api
+
+#### 4.3 修改 taskrun initcontainers image 地址和其他 pipeline 使用到的镜像  
+每个 taskrun 生成的pod都会有看到有 init container，比如
+place-tools  
+registry.redhat.io/openshift-pipelines-tech-preview/pipelines-entrypoint-rhel8@sha256:395d00fa03ffa37082f4588e1ab6138565875ebe804d05c87ae69d63472216a8
+
+working-dir-initializer  
+registry.access.redhat.com/ubi8/ubi-minimal@sha256:5cfbaf45ca96806917830c183e9f37df2e913b187aadb32e89fd83fa455ebaa6
+
+place-scripts  
+registry.access.redhat.com/ubi8/ubi-minimal@sha256:5cfbaf45ca96806917830c183e9f37df2e913b187aadb32e89fd83fa455ebaa6
+
+要修改他们为内网地址，可以通过 ImageContentSourcePolicy 重定向。  
+也可以找到 pipeline operator 的配置直接修改镜像地址。
+
+在 openshift-operators project 下可以看到 deployment openshift-pipelines-operator， 其中的环境变量可以看到 pipeline operator 使用到的镜像地址。不过直接修改 deployment 是不会生效的。
+需要修改 clusterserviceversions  
+
+```bash
+[root@bastion ~]# oc -n openshift-operators get deploy
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+openshift-pipelines-operator   1/1     1            1           13d
+
+          - name: IMAGE_PIPELINES_ARG__SHELL_IMAGE
+            value: registry.access.redhat.com/ubi8/ubi-minimal@sha256:fdfb0770bff33e0f97d78583efd68b546a19d0a4b0ac23eef25ef261bca3e975
+          - name: IMAGE_PIPELINES_ARG__ENTRYPOINT_IMAGE
+            value: registry.redhat.io/openshift-pipelines/pipelines-entrypoint-rhel8@sha256:e77d62854f56f1a09de1dc60d7a2436cb4255af232ca126b3c7a6d8f76a18c68
+
+
+[root@bastion ~]# oc -n openshift-operators get clusterserviceversions
+NAME                                DISPLAY                       VERSION   REPLACES                            PHASE
+redhat-openshift-pipelines.v1.4.0   Red Hat OpenShift Pipelines   1.4.0     redhat-openshift-pipelines.v1.3.1   Succeeded
+
+# 修改 csv 中对应环境变量，然后查看 openshift-pipelines-operator pod 是否更新变量  
+[root@bastion ~]# oc -n openshift-operators edit clusterserviceversions redhat-openshift-pipelines.v1.4.0
+
+[root@bastion ~]# oc -n openshift-operators get pod
+
+```
+
+此时再执行 pipeline 和task，使用的 init container image 地址就变成了本地仓库
+
+```bash
+[root@bastion ~]# oc -n demo-cicd describe pod petclinic-deploy-dev-0z6mit-source-clone-lcndm-pod-bwlg2  
+
+Events:
+  Type    Reason          Age    From               Message
+  ----    ------          ----   ----               -------
+  Normal  Scheduled       7m59s  default-scheduler  Successfully assigned demo-cicd/petclinic-deploy-dev-0z6mit-source-clone-lcndm-pod-bwlg2 to worker3
+  Normal  AddedInterface  7m57s  multus             Add eth0 [10.254.5.57/24]
+  Normal  Pulling         7m57s  kubelet            Pulling image "registry.example.com:5000/ubi8/ubi-minimal:8.2"
+  Normal  Pulled          7m23s  kubelet            Successfully pulled image "registry.example.com:5000/ubi8/ubi-minimal:8.2" in 33.878561435s
+  Normal  Created         7m23s  kubelet            Created container place-scripts
+  Normal  Started         7m23s  kubelet            Started container place-scripts
+  Normal  Pulling         7m23s  kubelet            Pulling image "registry.example.com:5000/openshift-pipelines/pipelines-entrypoint-rhel8:v1.4.0-94"
+  Normal  Pulled          6m38s  kubelet            Successfully pulled image "registry.example.com:5000/openshift-pipelines/pipelines-entrypoint-rhel8:v1.4.0-94" in 44.505383656s
+
+```
+
 
 ### 5. 参考链接
 

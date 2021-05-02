@@ -2,51 +2,10 @@
 
 
 
-OpenShift Pipelines (Tekton) is GA'd from Openshift 4.4 onwards.
 
-
-### 安装 Red Hat OpenShift Pipelines Operator (Tekton)
-
-如果离线环境，需要先执行离线部署operatorhub  
-https://github.com/cai11745/ocp4-userguide  可参照《离线部署operatorhub并批量导入》
-
-1. 在控制台的 Administrator 视角中，Operators → OperatorHub。
-2. 搜索 Red Hat OpenShift Pipelines Operator。点 Red Hat OpenShift Pipelines Operator 。
-3. 在 Install Operator 页面中：
-Installation Mode 选择 All namespaces on the cluster (default)。选择该项会将 Operator 安装至默认openshift-operators 命名空间，这将启用 Operator 以进行监视并在集群中的所有命名空间中可用。
-Approval Strategy（批准策略）选择 Automatic。这样可确保以后对 Operator 的升级由 Operator Lifecycle Manager (OLM) 自动进行。
-
-Update Channel：Stable 频道启用 Red Hat OpenShift Pipelines Operator 最新稳定版本的安装。preview 频道启用 Red Hat OpenShift Pipelines Operator 的最新预览版本，该版本可能包含 Stable 频道中还未提供的功能。
-
-点击 Install。会看到 Installed Operators 页面中列出的 Operator。
-
-检查 Status 变成 Succeeded 表示 Red Hat OpenShift Pipelines Operator 已安装成功。
-
-```bash
-查看相关api
-[root@bastion ~]# oc api-resources --api-group=tekton.dev
-NAME                SHORTNAMES   APIVERSION            NAMESPACED   KIND
-clustertasks                     tekton.dev/v1beta1    false        ClusterTask
-conditions                       tekton.dev/v1alpha1   true         Condition
-pipelineresources                tekton.dev/v1alpha1   true         PipelineResource
-pipelineruns        pr,prs       tekton.dev/v1beta1    true         PipelineRun
-pipelines                        tekton.dev/v1beta1    true         Pipeline
-runs                             tekton.dev/v1alpha1   true         Run
-taskruns            tr,trs       tekton.dev/v1beta1    true         TaskRun
-tasks                            tekton.dev/v1beta1    true         Task
-
-相关pod  
-[root@bastion ~]# oc get pod -n openshift-pipelines
-NAME                                             READY   STATUS    RESTARTS   AGE
-tekton-operator-proxy-webhook-5c86d47c54-kpcvx   1/1     Running   0          6h42m
-tekton-pipelines-controller-78f7f7449d-wrcvb     1/1     Running   0          6h42m
-tekton-pipelines-webhook-7885bc985b-54pc5        1/1     Running   0          7h10m
-tekton-triggers-controller-76c8d6bd-kwgrk        1/1     Running   0          7h10m
-tekton-triggers-webhook-6d6cfb6568-gl779         1/1     Running   0          7h10m
-```
 
 ### demo 环境初始化安装
-需要提前准备 storageclass 或者准备准备6个 5G的RWO空置pv，用户 gogs，nexus 等数据持久化。
+需要提前准备 storageclass 或者准备准备6个 5G的RWO空置pv，用于 gogs，nexus 等数据持久化。
 
 ```bash
 oc new-project demo
@@ -77,6 +36,9 @@ quay.io/siamaksade/python-oc
 ->registry.cn-hangzhou.aliyuncs.com/laocai/python-oc:latest  
 这个镜像在 tekton-cd-demo/config/gogs-init-taskrun.yaml  
 
+mvn:3.5.0-jdk-8 -> 
+registry.cn-hangzhou.aliyuncs.com/laocai/mvn:3.5.0-jdk-8
+这个镜像在 tasks/mvn-task.yaml 
 
 脚本执行完成会提示 gogs，sonar，nexus 的访问地址。
 
@@ -126,39 +88,103 @@ reports-repo-pv             Bound    pvc-90a8f378-67a9-499f-91c7-1b2382153d93   
 
 ### demo.sh install 执行过程解析
 对 demo.sh 内容进行查看，看下在 install 过程具体执行了哪些动作。
+本节脚本不需要再执行。只为解读过程。  
+
+cicd_prj dev_prj stage_prj 对应我们创建的三个demo project，可以在 demo.sh 中定义，此处分别对应 demo-cicd demo-dev demo-stage  
+
+demo-cicd 运行公共组件 gogs、nexus等，及执行流水线
+demo-dev 和 demo-stage 分别运行开发和模拟环境  
 
 1. 创建 project
-oc new-project demo-cicd
-oc new-project demo-dev
-oc new-project demo-stage
+```bash
+PRJ_PREFIX="demo"
+dev_prj="$PRJ_PREFIX-dev"
+stage_prj="$PRJ_PREFIX-stage"
+cicd_prj="$PRJ_PREFIX-cicd"
+
+oc new-project $cicd_prj 
+oc new-project $dev_prj
+oc new-project $stage_prj 
+```
 
 2. 对 service account pipeline 授权
-oc policy add-role-to-user edit system:serviceaccount:demo-cicd:pipeline -n demo-dev
-oc policy add-role-to-user edit system:serviceaccount:demo-cicd:pipeline -n demo-stage
-oc policy add-role-to-user edit system:serviceaccount:demo-stage:default -n demo-dev
+```bash
+oc policy add-role-to-user edit system:serviceaccount:$cicd_prj:pipeline -n $dev_prj
+oc policy add-role-to-user edit system:serviceaccount:$cicd_prj:pipeline -n $stage_prj
+oc policy add-role-to-user edit system:serviceaccount:$stage_prj:default -n $dev_prj
+```
 
-demo-cicd project 下的 pipeline sa 对 demo-dev 和 demo-stage project 具备 edit 权限。  
+demo-cicd project 下的 pipeline sa 对 demo-dev 和 demo-stage project 具备 edit 权限，因为流水线是在 demo-cicd执行，需要对另外两个project 有读写 deployment 等资源的权限。  
 demo-stage project 下的 pipeline sa 对 demo-dev project 具备 edit 权限。
 
-3. 在 demo-cicd project 部署 gogs，nexus，sonarqube
-
+3. 在 demo-cicd project 部署 gogs，nexus，sonarqube, reports-repo
+```bash
 [root@bastion tekton-cd-demo]# ls cd/
 gogs.yaml  nexus.yaml  reports-repo.yaml  sonarqube.yaml
-[root@bastion tekton-cd-demo]# oc apply -f cd -n demo-cicd
+[root@bastion tekton-cd-demo]#   oc apply -f cd -n $cicd_prj
+
+GOGS_HOSTNAME=$(oc get route gogs -o template --template='{{.spec.host}}' -n $cicd_prj)
+```
 
 此处会创建4个pvc用作数据持久化。
 
 gogs 和 postgresql 用作 GitServer，存放代码  
-nexus 
-sonarqube 
-reports-repo 
+nexus 用来缓存和存放第三方依赖库，编译后的制品
+sonarqube 代码质量分析工具
+reports-repo 一个upload服务配合nginx，用来存放和展示报告
 
-### Tekton 组件解读
+4. 导入自定义task及pipeline
+
+在 demo-cicd project导入自定义 task  
+```bash
+[root@bastion tekton-cd-demo]# ls tasks/
+dependency-report-task.yaml  gatling-task.yaml  s2i-java-11-task.yaml
+deploy-app-task.yaml         mvn-task.yaml
+
+oc apply -f tasks -n $cicd_prj
+
+# 导入 maven 配置，用于编译的时候将私服地址指向我们部署的nexus
+oc create -f config/maven-settings-configmap.yaml -n $cicd_prj
+
+# 创建两个 pvc， 用于 dev 和 stage 两个pipeline 的 workspace
+oc apply -f config/pipeline-pvc.yaml -n $cicd_prj
+
+# 将两个 pipeline 中的 project name。 git url替换成实际情况，也可以不改，创建pipelinerun 的时候修改  
+
+sed -i "s/demo-dev/$dev_prj/g" pipelines/pipeline-deploy-dev.yaml 
+sed -i "s#https://github.com/siamaksade#http://$GOGS_HOSTNAME/gogs#g" pipelines/pipeline-deploy-dev.yaml 
+
+sed -i "s/demo-dev/$dev_prj/g" pipelines/pipeline-deploy-stage.yaml
+sed -i "s/demo-stage/$stage_prj/g" pipelines/pipeline-deploy-stage.yaml
+sed -i "s#https://github.com/siamaksade#http://$GOGS_HOSTNAME/gogs#g" pipelines/pipeline-deploy-stage.yaml
+
+oc create -f pipelines -n $cicd_prj
+
+# 导入 trigger
+oc apply -f triggers/gogs-triggerbinding.yaml -n $cicd_prj
+oc apply -f triggers/triggertemplate.yaml -n $cicd_prj
+sed "s/demo-dev/$dev_prj/g" triggers/eventlistener.yaml | oc apply -f - -n $cicd_prj
+
+```
+
+5. 导入 gogs 配置并初始化
+
+```bash
+# 导入 gogs-config ，配置了 gogs 访问域名，访问postgres的地址及用户密码  
+sed "s/@HOSTNAME/$GOGS_HOSTNAME/g" config/gogs-configmap.yaml | oc create -f - -n $cicd_prj
+oc rollout status deployment/gogs -n $cicd_prj
+
+# 执行了一个 taskrun，初始化 gogs 密码，及clone github demo 到 gogs  
+oc create -f config/gogs-init-taskrun.yaml -n $cicd_prj
+```
+
+### 执行流水线
 
 
 
-参考内容
-https://access.redhat.com/documentation/zh-cn/openshift_container_platform/4.7/html/cicd/installing-pipelines#op-installing-pipelines-operator-in-web-console_installing-pipelines
+
+
+### 参考内容
 
 https://github.com/siamaksade/tekton-cd-demo
 
