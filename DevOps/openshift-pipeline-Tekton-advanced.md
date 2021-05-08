@@ -1,5 +1,8 @@
 
 
+使用的java应用源码
+https://github.com/cai11745/spring-petclinic.git
+在官方基础增加了 Dockerfile，k8s目录（deployment/service/route yaml），environments目录
 
 - s2i-build-and-deploy.yaml openshift自带demo  
 
