@@ -15,7 +15,7 @@
 
 
 * 权限与认证
-  * [访问web控制台](./user-permissions/web-console.md.md)
+  * [访问web控制台](./user-permissions/web-console.md)
   * [使用HTPasswd方式管理用户](./user-permissions/add-htpasswd-provider-oauth.md)
   * [移除kubeadmin默认管理员](./user-permissions/remove-kubeadmin.md)
 

@@ -101,3 +101,12 @@ avaiable 变成了true，只managed但是不配存储，状态是false的
 NAME             VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
 image-registry   4.7.5     True        False         False      6m11sm
 ```
+
+默认没有创建route，通过命令修改配置创建route
+```bash
+oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+
+[root@bastion new]# oc get route -n openshift-image-registry 
+NAME            HOST/PORT                                                      PATH   SERVICES         PORT    TERMINATION   WILDCARD
+default-route   default-route-openshift-image-registry.apps.ocp4.example.com          image-registry   <all>   reencrypt     None
+```
