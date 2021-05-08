@@ -1,0 +1,63 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-app
+spec:
+  params:
+    - name: DEPLOYMENT_NAME
+      description: The name of deployment
+      type: string
+    - name: CURRENT_IMAGE
+      description: The current image repo/image:tag in the manifests for the deployment
+      type: string
+    - name: NEW_IMAGE_NAME
+      description: The new image repo/image to be deployed
+      type: string
+    - name: NEW_IMAGE_TAG
+      description: The new image tag to be deployed
+      type: string
+      default: ""
+    - name: NEW_IMAGE_DIGEST
+      description: The digest of the new image to get deployed
+      type: string
+      default: ""
+    - name: NAMESPACE
+      description: The namespace for the deployment
+      type: string
+    - name: KUSTOMIZE_OVERLAY_DIR
+      description: The subdirectory in configs git repo for the kustomize overlay to be applied
+  workspaces:
+  - description: The workspace consisting of maven project.
+    name: source
+  steps:
+    - name: apply-manifests
+      workingDir: $(workspaces.source.path)
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli
+      script: |
+
+        find $(workspaces.source.path)
+
+        cat >> $(workspaces.source.path)/$(params.KUSTOMIZE_OVERLAY_DIR)/kustomization.yaml <<- EOF
+
+        images:
+        - name: quay.io/siamaksade/spring-petclinic:latest
+          newName: $(params.NEW_IMAGE_NAME)
+          newTag: $(params.NEW_IMAGE_TAG)
+          digest: $(params.NEW_IMAGE_DIGEST)
+        EOF
+
+        [[ "x$(params.NEW_IMAGE_DIGEST)" == "x" ]] && sed -i "/digest/d" $(workspaces.source.path)/$(params.KUSTOMIZE_OVERLAY_DIR)/kustomization.yaml
+        [[ "x$(params.NEW_IMAGE_TAG)" == "x" ]] && sed -i "/newTag/d" $(workspaces.source.path)/$(params.KUSTOMIZE_OVERLAY_DIR)/kustomization.yaml
+
+        echo "########################"  
+        echo "## kustomization.yaml ##"
+        echo "########################"
+
+        cat $(workspaces.source.path)/$(params.KUSTOMIZE_OVERLAY_DIR)/kustomization.yaml
+
+        echo "######## DRY RUN #######"
+        oc apply -k $(params.KUSTOMIZE_OVERLAY_DIR) --dry-run=client -o yaml -n $(params.NAMESPACE)
+        echo "########################"
+
+        oc apply -k $(params.KUSTOMIZE_OVERLAY_DIR) -n $(params.NAMESPACE)
+        oc rollout status deploy/$(params.DEPLOYMENT_NAME) -n $(params.NAMESPACE)
