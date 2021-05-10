@@ -1,0 +1,20 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: s2i-build-and-deploy-mvn-mirror-
+spec:
+  params:
+  - name: IMAGE_NAME
+    value: image-registry.openshift-image-registry.svc:5000/demo/java-mvn-cache:v1
+  - name: GIT_REPO
+    value: http://gogs-demo-cicd.apps.ocp4.example.com/gogs/spring-petclinic.git
+  - name: GIT_REVISION
+    value: master
+  - name: MAVEN_MIRROR_URL
+    value: http://nexus-demo-cicd.apps.ocp4.example.com/repository/maven-public/
+  pipelineRef:
+    name: s2i-build-and-deploy-mvn-mirror
+  workspaces:
+  - name: workspace
+    persistentVolumeClaim:
+      claimName: petclinic-dev-workspace
