@@ -1,0 +1,19 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: s2i-build-and-deploy-
+spec:
+  params:
+  - name: IMAGE_NAME
+    value: image-registry.openshift-image-registry.svc:5000/demo/s2i-java:v1
+  - name: GIT_REPO
+    value: http://gogs-demo-cicd.apps.ocp4.example.com/gogs/spring-petclinic.git
+  - name: GIT_REVISION
+    value: master
+  pipelineRef:
+    name: s2i-build-and-deploy
+  serviceAccountName: pipeline
+  workspaces:
+  - name: workspace
+    persistentVolumeClaim:
+      claimName: petclinic-dev-workspace

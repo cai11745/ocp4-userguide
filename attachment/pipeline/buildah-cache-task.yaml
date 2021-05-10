@@ -20,7 +20,7 @@ spec:
     description: The location of the buildah builder image.
     name: BUILDER_IMAGE
     type: string
-  - default: fuse-overlay
+  - default: vfs
     description: Set buildah storage driver
     name: STORAGE_DRIVER
     type: string
@@ -58,7 +58,7 @@ spec:
     script: |
       buildah --storage-driver=$(params.STORAGE_DRIVER) bud \
         $(params.BUILD_EXTRA_ARGS) --format=$(params.FORMAT) \
-        --tls-verify=$(params.TLSVERIFY) --no-cache \
+        --tls-verify=$(params.TLSVERIFY) \
         -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
     volumeMounts:
     - mountPath: /var/lib/containers

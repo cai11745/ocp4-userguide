@@ -1,0 +1,19 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: mvn-cache-and-deploy-
+spec:
+  params:
+  - name: NAMESPACE
+    value: demo
+  pipelineRef:
+    name: mvn-cache-and-deploy
+  workspaces:
+  - name: source-cache
+    persistentVolumeClaim:
+      claimName: petclinic-dev-workspace
+  - name: maven-settings
+    emptyDir: {}
+  - name: maven-cache
+    persistentVolumeClaim:
+      claimName: m2-cache
