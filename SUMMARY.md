@@ -10,6 +10,7 @@
 
 * 权限与认证
   * [访问web控制台](./user-permissions/web-console.md)
+  * [自定义web控制台--告示，超链接](./cluster-install-and-managerment/web-console-customization.md)
   * [使用HTPasswd方式管理用户](./user-permissions/add-htpasswd-provider-oauth.md)
   * [移除kubeadmin默认管理员](./user-permissions/remove-kubeadmin.md)
 
@@ -33,6 +34,7 @@
 
 * DevOps
   * [Pipeline(Tekton)简介与场景示例](./DevOps/openshift-pipeline-Tekton-install.md)
+  * [Pipeline(Tekton)调优提速](./DevOps/openshift-pipeline-Tekton-advanced.md)
 
 * 资源管理--未就绪
 
