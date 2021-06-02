@@ -82,7 +82,7 @@ spec:
 ### ConsoleLinks
 
 添加自定义超链接。  
-有三个地方可以加，分别是 User Menu，Help Menu，Application Menu
+有几个地方可以加，分别是 User Menu，Help Menu，Application Menu，NamespaceDashboard
 
 ![ConsoleLinks-1](../images/cluster-install-and-managerment/ConsoleLinks-1.png)
 
@@ -136,6 +136,31 @@ https://www.base64-image.de/
 效果如下
 
 ![ConsoleLink-application](../images/cluster-install-and-managerment/ConsoleLink-application.png)
+
+#### NamespaceDashboard
+
+这是加到 project 页面的，可以指定哪些 project 看到。 
+
+以下指定了 default，demo，demo-cicd 三个project，在 Home -> project 详情页可以看到配置的链接。
+
+![ConsoleLink-namspace](../images/cluster-install-and-managerment/ConsoleLink-namspace.png)
+
+```bash
+[root@bastion console-crd]# cat ConsoleLink-namspace.yaml 
+apiVersion: console.openshift.io/v1
+kind: ConsoleLink
+metadata:
+  name: example-namespace-dashboard
+spec:
+  href: 'https://www.example.com'
+  location: NamespaceDashboard
+  text: Namespace Dashboard Link
+  namespaceDashboard:
+    namespaces:
+      - default
+      - demo
+      - demo-cicd
+```
 
 ### ConsoleCLIDownloads
 用于配置一些 client 工具的下载说明和下载地址。  

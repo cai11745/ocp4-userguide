@@ -46,4 +46,4 @@
 
 **扫一扫，关注微信公众号，不迷路，实时分享容器平台技术。**
 
-<div align="center"><img width="300" height="300" src="./images/gongzhonghao.jpeg"/></div>
+<div align="center"><img width="300" height="300" src="https://ftp.rss.ink/imgs/2021/05/11a97ed9fa3b9d85.jpeg"/></div>

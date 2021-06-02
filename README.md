@@ -1,6 +1,6 @@
 ### openshift4 使用与运维手册
 
-刚开始写，平台基本使用和运维内容都会有。基于4.4 同样适用其他 4.x 差异不大。
+对 Openshift4 平台使用和运维内做一些记录与分享。
 
 ---
 
@@ -53,4 +53,4 @@
 
 **扫一扫，关注微信公众号，不迷路，实时分享容器平台技术。或者直接搜 老菜**
 
-<div align="center"><img width="300" height="300" src="./images/gongzhonghao.jpeg"/></div>
+<div align="center"><img width="300" height="300" src="https://ftp.rss.ink/imgs/2021/05/11a97ed9fa3b9d85.jpeg"/></div>
