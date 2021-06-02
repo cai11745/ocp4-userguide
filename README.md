@@ -41,6 +41,7 @@
 * DevOps
   * [Pipeline(Tekton)简介与场景示例](./DevOps/openshift-pipeline-Tekton-install.md)
   * [Pipeline(Tekton)调优提速](./DevOps/openshift-pipeline-Tekton-advanced.md)
+  * [GitOps持续交付 - ArgoCD](./DevOps/gitops-argocd.md)
 
 
 * 资源管理--未就绪

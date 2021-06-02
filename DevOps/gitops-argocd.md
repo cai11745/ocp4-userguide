@@ -1,4 +1,35 @@
+Argo CD是用于Kubernetes的声明性GitOps连续交付工具。
 
+简单说，把应用部署所需的 yaml 存放在git上，自动分发到不同k8s集群，并对应用的状态做监视。
+
+### ArgoCD 架构
+
+ArgoCD 通过 kubernetes 控制器连续监视正在运行的应用程序，并将当前的状态与所需的目标状态（在Git存储库中指定）进行比较。当前状态偏离目标状态的已部署应用程序被标记为OutOfSync。 ArgoCD报告并可视化差异，同时提供了自动或手动将当前状态同步到所需目标状态的能力。 在Git存储库中对所需目标状态所做的任何修改都可以自动应用并反映在指定的目标环境中。
+
+![argocd-Architecture.png](../images/DevOps/argocd-Architecture.png)
+
+主要特征：  
+将应用程序自动部署到指定的目标环境  
+支持多种配置管理/模板工具（Kustomize、Helm、Ksonnet、Jsonnet、plain-YAML）  
+能够管理和部署到多个集群  
+SSO 集成（OIDC、OAuth2、LDAP、SAML 2.0、GitHub、GitLab、Microsoft、LinkedIn）  
+用于授权的多租户和 RBAC 策略  
+回滚/随处回滚到 Git 存储库中提交的任何应用程序配置  
+应用资源健康状况分析  
+自动配置漂移检测和可视化  
+自动或手动将应用程序同步到所需状态  
+提供应用程序活动实时视图的 Web UI  
+用于自动化和 CI 集成的 CLI  
+Webhook 集成（GitHub、BitBucket、GitLab）  
+自动化的访问令牌  
+PreSync、Sync、PostSync 挂钩以支持复杂的应用程序部署（例如蓝色/绿色和金丝雀升级）  
+应用程序事件和 API 调用的审计跟踪  
+普罗米修斯指标  
+用于覆盖 Git 中的 ksonnet/helm 参数的参数覆盖  
+
+**我认为最大的两个特点：**
+1. 借助git 的版本管理能力，更好的实现了资源的版本管理。弥补了k8s目前只有deployment具备版本管理的不足。  
+2. 应用发布的可视化能力，特别是 helm 的可视化，可以复用模板，且界面面向用户友好。纯 yaml 的方式，在大规模推进中，对开发人员不够友好。
 
 ### Install Openshift GitOps Operator 
 在 Web 控制台中安装 GitOps Operator
@@ -70,18 +101,18 @@ oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:opens
 
 通过页面键入的参数，其实是生成了一个 argocd 的CRD，kind: Applications
 
-General:
-  Name: spring-yaml  #自定义
-  Project: default  #不要改
-  SyncPolicy : Manual   #同步策略，手动或自动
+General:  
+  Name: spring-yaml  #自定义  
+  Project: default  #不要改  
+  SyncPolicy : Manual   #同步策略，手动或自动  
 
 Source:
-  RepositoryURL: https://github.com/cai11745/openshift-gitops-getting-started.git
-  Revision: HEAD
-  Path: app-yaml  #git repo 子目录
+  RepositoryURL: https://github.com/cai11745/openshift-gitops-getting-started.git  
+  Revision: HEAD  
+  Path: app-yaml  #git repo 子目录  
 
-Destination:
-  Server: 'https://kubernetes.default.svc'    #不要改
+Destination:  
+  Server: 'https://kubernetes.default.svc'    #不要改  
   Namespace: demo-yaml   #应用发布的namespace
 
 参数解读翻到下一节  
@@ -144,12 +175,12 @@ Foreground - k8s 必须删除所有 child 资源才能删除资源本身
 
 Source:  
   RepositoryURL: git repo url  
-  Revision: 可以指定branch，或者tag，默认branch - HEAD
+  Revision: 可以指定branch，或者tag，默认branch - HEAD  
   Path: yaml存放的目录
 
 DESTINATION:  
   Cluster URL: 选默认的不要改，是k8s api地址。 https://kubernetes.default.svc  
-  Namespace: 应用要部署到哪个 namespace，注意权限。
+  Namespace: 应用要部署到哪个 namespace，注意权限。  
 
 更多参数解读见此  
 https://argo-cd.readthedocs.io/en/latest/user-guide/sync-options/
@@ -197,14 +228,45 @@ Synchronize resources 可以选择文件针对性更新。
 #### SYNC STATUS
 就是更新记录了。
 
+#### HISTORY AND ROLLBACK
+升级的版本记录，并且支持回滚。  
+这也是 argocd 的一个重大特性，全量 yaml 的版本管理。  
+k8s 本身的版本管理只局限于 deployment，而其他资源对象 configmap，service 等都是不具备版本管理能力的。  
+可以用于快速回滚，而不需要去 git 一个个回滚文件然后同步。
+可以看到每个版本的发布时间，发布时长，运行时长。配置的自定义参数。 点版本最右边那三个点，展开选择 rollback 即可。  
+Revision 是 short commit id  
 
+```bash
+[root@bastion openshift-gitops-getting-started]# git rev-parse --short HEAD
+2544b34
+```
+
+![argocd-app-status-HISTORY-AND-ROOLBACK.png](../images/DevOps/argocd-app-status-HISTORY-AND-ROOLBACK.png)
+
+回滚后，由于回到历史版本，会与 git repo 不一致，状态会是OutOfSync  
+
+#### DELETE
+删除 application 有三种模式  
+前两个会删除关联的资源，结果是一致的。  
+第三个不会删除关联的资源。  
+
+Foreground
+前台删除，点击后，application 会显示资源的删除过程，至完全删除。
+
+Background 
+后台删除，点击后，application 直接不见了，后台会执行删除动作。
+
+Non-cascading  
+只删除 applications，关联的资源不删除，就是deployment 等都保留，只删除 argocd 的 applications 对象。
+
+![argocd-app-status-DELETE.png](../images/DevOps/argocd-app-status-DELETE.png)
 
 #### CURRENT SYNC STATUS
-SYNC POLICY 为 Manual时，不管是修改git repo 内容或者后台修改 deploy 或者svc 之类，CURRENT SYNC STATUS 就会变成 OutOfSync，并会把不同步的资源用黄色图标标注。  
+不管是修改git repo 内容或者后台修改 deploy 或者svc 之类，CURRENT SYNC STATUS 就会变成 OutOfSync，并会把不同步的资源用黄色图标标注。  
 
-SYNC POLICY 为 Automic，
-
-
+#### 面向资源的操作
+可以对 deployment，svc，route 等直接单独进行同步操作。查看对象 yaml ，event。可以直观的展示每个资源存在的时长。    
+对于 deploy，rs，pod 还可以查看日志，具备了简单的运维能力，大部分情况可以不去看 openshift 平台就可以完成应用的更新操作。
 
 ### FAQ
 
@@ -228,3 +290,5 @@ SYNC POLICY 为 Automic，
 https://access.redhat.com/documentation/zh-cn/openshift_container_platform/4.7/html/cicd/getting-started-with-openshift-gitops
 
 https://argo-cd.readthedocs.io/en/stable/user-guide/
+
+https://argoproj.github.io/argo-cd/
