@@ -1,5 +1,6 @@
 * [简介](README.md)
 * 集群安装与配置管理
+  * [在笔记本上运行的OpenShift集群-CRC]](./cluster-install-and-managerment/openshift-crc-on-mac.md) 
   * [4.7 在线安装 DHCP方式](./cluster-install-and-managerment/openshift4.7-install-online-DHCP.md)
   * [4.3 离线部署 DHCP方式](https://github.com/cai11745/k8s-ocp-yaml/blob/master/ocp4/2020-02-25-openshift4.3-install-offline-dhcp.md)
   * [4.4 在线部署 静态IP(支持all-in-one单点)](https://github.com/cai11745/k8s-ocp-yaml/blob/master/ocp4/2020-02-25-openshift4.4-install-online-staticIP-allinone.md)
